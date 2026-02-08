@@ -1,0 +1,42 @@
+:root {
+    /* --- 暖色系调色板 --- */
+    --bg-warm-1: #fdfbf7;      /* 米白底色 */
+    --accent-orange: #ff9a8b;  /* 暖橙强调色 */
+    --accent-pink: #ff6a88;    /* 暖粉渐变 */
+    --text-main: #4a4a4a;      /* 深灰文字（比纯黑柔和） */
+    --text-light: #8b8b8b;     /* 浅灰文字 */
+    
+    /* --- 磨砂玻璃参数 --- */
+    --glass-bg: rgba(255, 255, 255, 0.45); /* 半透明白 */
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    --blur-amount: 12px;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* 网页大背景：可以是深色或者虚化的暖色，为了突出中间的小手机 */
+    background: #e0e0e0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 核心容器：这就是你的“手机屏幕” */
+#app-screen {
+    width: 360px;
+    height: 800px;
+    position: relative;
+    overflow: hidden; /* 超出部分隐藏 */
+    background: linear-gradient(135deg, #fdfbf7 0%, #fff1eb 100%); /* 屏幕默认底色 */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15); /* 给屏幕一个悬浮感投影 */
+    /* 注意：没有 border-radius 或者很小，因为你说不要仿真外壳，我们只做屏幕 */
+}
+
+/* 隐藏滚动条但保留功能 */
+::-webkit-scrollbar {
+    display: none; 
+}
