@@ -6,7 +6,7 @@
     <title>AI Phone</title>
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="apps/desktop/desktop.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
@@ -19,17 +19,35 @@
                 
                 <!-- Hero Widget -->
                 <div class="hero-widget"
-                     :style="{ backgroundImage: heroSettings.bgImage ? 'url(' + heroSettings.bgImage + ')' : '', backgroundPosition: heroSettings.bgPosX + '% ' + heroSettings.bgPosY + '%', backgroundSize: heroSettings.bgSize + '%', color: heroSettings.textColor }"
+                     :style="{ 
+                        backgroundImage: heroSettings.bgImage ? 'url(' + heroSettings.bgImage + ')' : '', 
+                        backgroundPosition: heroSettings.bgPosX + '% ' + heroSettings.bgPosY + '%',
+                        backgroundSize: heroSettings.bgSize + '%',
+                        color: heroSettings.textColor 
+                     }"
                      @contextmenu.prevent="handleContextMenu" @touchstart="handleTouchStart" @touchend="handleTouchEnd" @click="triggerHeroBgUpload">
                     <div class="hero-overlay"></div>
                     <input type="file" id="hero-bg-upload" accept="image/*" @change="handleHeroBgUpload" style="display:none">
                     <div class="hero-left">
-                        <div class="clock-ring-container" @click.stop="triggerAvatarUpload">
+                        <div class="clock-ring-container">
                             <svg class="clock-svg" viewBox="0 0 100 100">
                                 <circle cx="50" cy="50" r="47" fill="none" :stroke="heroSettings.textColor" stroke-opacity="0.2" stroke-width="3" />
                                 <circle cx="50" cy="50" r="47" fill="none" :stroke="heroSettings.textColor" stroke-width="4" stroke-linecap="round" :stroke-dasharray="ringCircumference" :stroke-dashoffset="ringOffset" style="transition: stroke-dashoffset 1s linear;" />
                             </svg>
-                            <img :src="userAvatar" class="user-avatar" :style="{ borderColor: heroSettings.textColor + '30', objectPosition: 'center ' + heroSettings.avatarPosY + '%' }">
+                            <!-- 头像蒙版层 -->
+                            <div class="avatar-mask">
+                                <img v-if="userAvatar" 
+                                     :src="userAvatar" 
+                                     class="user-avatar" 
+                                     @click.stop="triggerAvatarUpload"
+                                     :style="{ 
+                                        transform: `translate(${(heroSettings.avatarPosX - 50)}%, ${(heroSettings.avatarPosY - 50)}%) scale(${heroSettings.avatarSize / 100})`
+                                     }">
+                                <div v-else 
+                                     class="avatar-empty-clickable" 
+                                     @click.stop="triggerAvatarUpload">
+                                </div>
+                            </div>
                             <input type="file" id="avatar-upload" accept="image/*" @change="handleAvatarUpload" style="display:none">
                         </div>
                         <div class="battery-area">
@@ -38,77 +56,82 @@
                         </div>
                     </div>
                     <div class="hero-right">
-                        <input v-model="headerText" class="header-input" :style="{ color: heroSettings.textColor }" @click.stop>
+                        <input v-model="headerText" class="header-input" :style="{ color: heroSettings.textColor }" @click.stop @change="saveData">
                         <div class="time-display"><div class="big-time">{{ timeString }}</div></div>
                         <div class="date-info">{{ dateString }} <span class="fancy-day">{{ dayString }}</span></div>
                         <div class="todo-list">
                             <div class="todo-item" v-for="(todo, index) in todos" :key="todo.id" :class="{ done: todo.done }">
-                                <i class="heart-icon" :class="todo.done ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" @click.stop="toggleTodo(index)"></i>
-                                <input v-model="todo.text" class="todo-input" :style="{ color: heroSettings.textColor }" placeholder="待办..." @click.stop>
+                                <i class="heart-icon" :class="todo.done ? 'ri-heart-fill' : 'ri-heart-line'" @click.stop="toggleTodo(index)"></i>
+                                <input v-model="todo.text" class="todo-input" :style="{ color: heroSettings.textColor }" placeholder="待办..." @click.stop @change="saveData">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 统一布局网格 -->
-                <div class="main-layout-area">
-                    <div class="app-item" @click="openApp('messenger')"><div class="app-icon"><i class="fa-solid fa-comment-dots"></i></div><span class="app-name">信使</span></div>
+                <!-- Hero Editor -->
+                <div v-if="showEditor" class="editor-modal-overlay" @click.self="closeEditor">
+                    <div class="editor-panel">
+                        <div class="editor-title">卡片个性化</div>
+                        
+                        <div class="delete-actions">
+                            <div v-if="heroSettings.bgImage" class="btn-delete" @click="deleteBg">删除背景图</div>
+                            <!-- 修复：常驻显示，用于重置位置 -->
+                            <div class="btn-delete" @click="deleteAvatar">删除头像</div>
+                        </div>
+                        
+                        <div class="editor-controls-grid">
+                            <!-- 背景列 -->
+                            <div class="editor-column" v-if="heroSettings.bgImage">
+                                <div class="control-label" style="font-weight:bold;">背景设置</div>
+                                <div class="control-group"><div class="control-label">缩放 ({{ heroSettings.bgSize }}%)</div><input type="range" v-model="heroSettings.bgSize" min="50" max="300" class="slider-input"></div>
+                                <div class="control-group"><div class="control-label">X轴 ({{ heroSettings.bgPosX }}%)</div><input type="range" v-model="heroSettings.bgPosX" min="0" max="100" class="slider-input"></div>
+                                <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.bgPosY }}%)</div><input type="range" v-model="heroSettings.bgPosY" min="0" max="100" class="slider-input"></div>
+                            </div>
+                            <!-- 头像列 -->
+                            <div class="editor-column" :class="{ 'editor-section-full': !heroSettings.bgImage }">
+                                <div class="control-label" style="font-weight:bold;">头像设置</div>
+                                <div class="control-group"><div class="control-label">缩放 ({{ heroSettings.avatarSize }}%)</div><input type="range" v-model="heroSettings.avatarSize" min="50" max="200" class="slider-input"></div>
+                                <div class="control-group"><div class="control-label">X轴 ({{ heroSettings.avatarPosX }}%)</div><input type="range" v-model="heroSettings.avatarPosX" min="0" max="100" class="slider-input"></div>
+                                <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.avatarPosY }}%)</div><input type="range" v-model="heroSettings.avatarPosY" min="0" max="100" class="slider-input"></div>
+                            </div>
+                        </div>
 
-                    <!-- Photo Widget Wrapper (NEW) -->
+                        <div class="control-group" style="margin-top:10px;"><div class="control-label">字体颜色</div><div class="color-picker-row"><input type="color" v-model="heroSettings.textColor" class="color-input"><span class="btn-reset" @click="resetTextColor">重置</span></div></div>
+                        <button class="btn-close" @click="closeEditor">完成并保存</button>
+                    </div>
+                </div>
+
+                <!-- Main Layout -->
+                <div class="main-layout-area">
+                    <div class="app-item" @click="openApp(sideApps[0].id)"><div class="app-icon"><i :class="sideApps[0].icon"></i></div><span class="app-name">{{ sideApps[0].name }}</span></div>
+
                     <div class="photo-grid-wrapper">
                         <div class="photo-widget"
                              :style="{ backgroundImage: photoSettings.bgImage ? 'url(' + photoSettings.bgImage + ')' : '', backgroundPosition: photoSettings.bgPosX + '% ' + photoSettings.bgPosY + '%', backgroundSize: photoSettings.bgSize + '%' }"
                              @contextmenu.prevent="handlePhotoContextMenu" @touchstart="handlePhotoTouchStart" @touchend="handleTouchEnd"
                              @click="photoWall.length === 0 ? triggerPhotoUpload() : null">
-                            
                             <input type="file" id="photo-wall-upload" multiple accept="image/*" @change="handlePhotoUpload" style="display:none">
-                            
                             <template v-if="photoWall.length > 0">
-                                <div class="photo-row">
-                                    <div class="photo-track">
-                                        <div class="scroll-group"><img v-for="p in photoWall" :key="'a-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div>
-                                        <div class="scroll-group"><img v-for="p in photoWall" :key="'b-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div>
-                                    </div>
-                                </div>
-                                <div class="photo-row bottom">
-                                    <div class="photo-track">
-                                        <div class="scroll-group"><img v-for="p in photoWall" :key="'ba-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div>
-                                        <div class="scroll-group"><img v-for="p in photoWall" :key="'bb-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div>
-                                    </div>
-                                </div>
+                                <div class="photo-row"><div class="photo-track"><div class="scroll-group"><img v-for="p in photoWall" :key="'a-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div><div class="scroll-group"><img v-for="p in photoWall" :key="'b-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div></div></div>
+                                <div class="photo-row bottom"><div class="photo-track"><div class="scroll-group"><img v-for="p in photoWall" :key="'ba-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div><div class="scroll-group"><img v-for="p in photoWall" :key="'bb-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div></div></div>
                             </template>
-                            <div v-else class="photo-placeholder"><i class="fa-solid fa-images" style="font-size: 24px; margin-bottom: 5px;"></i><div>上传照片</div></div>
+                            <div v-else class="photo-placeholder"><i class="ri-image-add-line" style="font-size: 24px; margin-bottom: 5px;"></i><div>上传照片</div></div>
                         </div>
-                        
-                        <!-- 这里的标题现在在组件外面 -->
-                        <input v-model="photoSettings.title" class="photo-title-outside" placeholder="TITLE" @click.stop>
+                        <input v-model="photoSettings.title" class="photo-title-outside" placeholder="TITLE" @click.stop @change="saveData">
                     </div>
 
-                    <div class="app-item" @click="openApp('gallery')"><div class="app-icon"><i class="fa-solid fa-image"></i></div><span class="app-name">相册</span></div>
+                    <div class="app-item" @click="openApp(sideApps[1].id)"><div class="app-icon"><i :class="sideApps[1].icon"></i></div><span class="app-name">{{ sideApps[1].name }}</span></div>
                     <div class="app-item" v-for="app in extraApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon"><i :class="app.icon"></i></div><span class="app-name">{{ app.name }}</span></div>
                 </div>
 
                 <div class="dock-container"><div class="app-item" v-for="app in dockApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon dock-icon"><i :class="app.icon"></i></div></div></div>
 
-                <!-- Editors (Hero & Photo) - No Changes in HTML structure, CSS handles them -->
-                <div v-if="showEditor" class="editor-modal-overlay" @click.self="closeEditor">
-                    <div class="editor-panel">
-                        <div class="editor-title">卡片个性化</div>
-                        <div class="delete-actions"><div v-if="heroSettings.bgImage" class="btn-delete" @click="deleteBg">删除背景图</div><div v-if="userAvatar !== defaultAvatar" class="btn-delete" @click="deleteAvatar">重置头像</div></div>
-                        <div class="control-group" v-if="heroSettings.bgImage"><div class="control-label">背景缩放 ({{ heroSettings.bgSize }}%)</div><input type="range" v-model="heroSettings.bgSize" min="50" max="300" class="slider-input"></div>
-                        <div class="control-group" v-if="heroSettings.bgImage"><div class="control-label">背景水平 ({{ heroSettings.bgPosX }}%)</div><input type="range" v-model="heroSettings.bgPosX" min="0" max="100" class="slider-input"></div>
-                        <div class="control-group" v-if="heroSettings.bgImage"><div class="control-label">背景垂直 ({{ heroSettings.bgPosY }}%)</div><input type="range" v-model="heroSettings.bgPosY" min="0" max="100" class="slider-input"></div>
-                        <div class="control-group"><div class="control-label">头像垂直</div><input type="range" v-model="heroSettings.avatarPosY" min="0" max="100" class="slider-input"></div>
-                        <div class="control-group"><div class="control-label">字体颜色</div><div class="color-picker-row"><input type="color" v-model="heroSettings.textColor" class="color-input"><span class="btn-reset" @click="resetTextColor">重置</span></div></div>
-                        <button class="btn-close" @click="closeEditor">完成</button>
-                    </div>
-                </div>
-
+                <!-- Photo Editor -->
                 <div v-if="showPhotoEditor" class="editor-modal-overlay" @click.self="closePhotoEditor">
                     <div class="editor-panel">
                         <div class="editor-title" style="display:flex; justify-content:space-between;">
                             <span v-if="!photoSettings.currentEditId">照片墙管理</span>
-                            <span v-else class="btn-back" @click="backToPhotoList"><i class="fa-solid fa-arrow-left"></i> 返回</span>
+                            <span v-else class="btn-back" @click="backToPhotoList"><i class="ri-arrow-left-line"></i> 返回</span>
                             <span class="btn-close" style="width:auto; margin:0; padding:5px 12px;" @click="closePhotoEditor">关闭</span>
                         </div>
                         <div v-if="!photoSettings.currentEditId">
@@ -116,13 +139,18 @@
                                 <div class="btn-delete" style="border-color:#ccc; color:#333; background:#eee;" @click="triggerPhotoBgUpload">更换背景 <input type="file" id="photo-bg-upload" accept="image/*" @change="handlePhotoBgUpload" style="display:none"></div>
                                 <div v-if="photoSettings.bgImage" class="btn-delete" @click="deletePhotoBg">删除背景</div>
                             </div>
-                            <div class="control-group" v-if="photoSettings.bgImage"><div class="control-label">背景缩放 ({{ photoSettings.bgSize }}%)</div><input type="range" v-model="photoSettings.bgSize" min="50" max="300" class="slider-input"></div>
-                            <div class="control-group" v-if="photoSettings.bgImage"><div class="control-label">背景水平 ({{ photoSettings.bgPosX }}%)</div><input type="range" v-model="photoSettings.bgPosX" min="0" max="100" class="slider-input"></div>
-                            <div class="control-group" v-if="photoSettings.bgImage"><div class="control-label">背景垂直 ({{ photoSettings.bgPosY }}%)</div><input type="range" v-model="photoSettings.bgPosY" min="0" max="100" class="slider-input"></div>
+                            <div class="editor-controls-grid" v-if="photoSettings.bgImage">
+                                <div class="editor-section-full">
+                                    <div class="control-label" style="font-weight:bold;">背景设置</div>
+                                    <div class="control-group"><div class="control-label">缩放 ({{ photoSettings.bgSize }}%)</div><input type="range" v-model="photoSettings.bgSize" min="50" max="300" class="slider-input"></div>
+                                    <div class="control-group"><div class="control-label">X轴 ({{ photoSettings.bgPosX }}%)</div><input type="range" v-model="photoSettings.bgPosX" min="0" max="100" class="slider-input"></div>
+                                    <div class="control-group"><div class="control-label">Y轴 ({{ photoSettings.bgPosY }}%)</div><input type="range" v-model="photoSettings.bgPosY" min="0" max="100" class="slider-input"></div>
+                                </div>
+                            </div>
                             <div class="control-label" style="margin-top:15px;">点击图片编辑细节</div>
                             <div class="photo-grid">
                                 <div class="grid-item" v-for="(p, index) in photoWall" :key="'grid-'+p.id" @click="selectPhotoToEdit(p.id)"><img :src="p.url" class="grid-img" :style="{ objectPosition: 'center ' + p.y + '%' }"></div>
-                                <div class="grid-item grid-add" @click="triggerPhotoUpload"><i class="fa-solid fa-plus" style="color:#ccc;"></i></div>
+                                <div class="grid-item grid-add" @click="triggerPhotoUpload"><i class="ri-add-line" style="font-size:20px; color:#ccc;"></i></div>
                             </div>
                         </div>
                         <div v-else>
@@ -134,7 +162,12 @@
                 </div>
 
             </div>
-            <div v-if="currentApp === 'messenger'" style="padding:20px; text-align:center;"><h1>信使</h1><button @click="currentApp = 'desktop'">返回桌面</button></div>
+            
+            <!-- App Placeholder -->
+            <div v-if="currentApp !== 'desktop'" style="padding:20px; text-align:center;">
+                <h1>APP: {{ currentApp }}</h1>
+                <button @click="currentApp = 'desktop'">返回桌面</button>
+            </div>
         </div>
     </div>
     <script src="apps/desktop/desktop.js"></script>
