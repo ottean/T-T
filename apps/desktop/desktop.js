@@ -3,35 +3,48 @@
 const DesktopModule = {
     data() {
         return {
+            // === 核心数据 ===
             widgetBg: '', 
             defaultAvatar: 'https://i.postimg.cc/dtz2dpnV/bookmark.png',
             userAvatar: 'https://i.postimg.cc/dtz2dpnV/bookmark.png',
             timeString: '12:45', dateString: '2026.02.08', dayString: 'Sunday',
             ringCircumference: 295, ringOffset: 0, batteryLevel: 100, headerText: 'Ɛ Lovely Day ⸝⋆* .〰 ★',
+            
+            // 待办文案更新
             todos: [
                 { id: 1, text: '给书签喂罐头', done: false },
                 { id: 2, text: '给Sean梳毛', done: false },
                 { id: 3, text: '一起在书店晒太阳', done: false }
             ],
-            // 照片墙数据
+
+            // === 照片墙数据 (已修复逗号错误) ===
             photoWall: [
-                { id: 1, url: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400&q=80', x: 50, y: 50, width: 80 },
-                { id: 2, url: 'https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?w=400&q=80', x: 50, y: 50, width: 80 },
-                { id: 3, url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80', x: 50, y: 50, width: 80 },
-                { id: 4, url: 'https://images.unsplash.com/photo-1516724562728-afc824a36e84?w=400&q=80', x: 50, y: 50, width: 80 },
-                { id: 5, url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80', x: 50, y: 50, width: 80 }
+                { id: 1, url: 'https://i.postimg.cc/zvLFnrh5/guzhang.png', x: 50, y: 50, width: 80 },
+                { id: 2, url: 'https://i.postimg.cc/Cxpsf9Lc/deyi.png', x: 50, y: 50, width: 80 },
+                { id: 3, url: 'https://i.postimg.cc/c1VbX9LZ/linggan.png', x: 50, y: 50, width: 80 },
+                { id: 4, url: 'https://i.postimg.cc/vZySd49x/jushou.png', x: 50, y: 50, width: 80 },
+                { id: 5, url: 'https://i.postimg.cc/TwBCN1fP/lini.png', x: 50, y: 50, width: 80 }, // <--- 这里加上了逗号
+                { id: 6, url: 'https://i.postimg.cc/zfcj3vLV/niaoni.png', x: 50, y: 50, width: 80 }
             ],
-            photoSettings: { bgImage: '', bgPosX: 50, bgPosY: 50, bgSize: 100, currentEditId: null, title: 'MEMORIES' },
+            
+            photoSettings: { 
+                bgImage: '', bgPosX: 50, bgPosY: 50, bgSize: 100, 
+                currentEditId: null, 
+                title: '我们需要更多Sariel!' 
+            },
+
             showEditor: false, showPhotoEditor: false, longPressTimer: null, 
             heroSettings: { bgImage: '', bgPosX: 50, bgPosY: 50, bgSize: 100, avatarPosX: 50, avatarPosY: 50, avatarSize: 100, textColor: '#ff9a8b' },
+            
             countdown: {
-                title: 'Together', // 默认标题
-                targetDate: '2023-01-01', // 默认日期
-                days: 0, // 计算结果
-                isFuture: false, // 是未来还是过去
-                showEditor: false // 编辑弹窗开关
+                title: 'Zoelle&Sean', 
+                targetDate: '2025-11-28', 
+                days: 0, 
+                isFuture: false, 
+                showEditor: false 
             },
-            // 全新 Remix 图标配置
+
+            // Remix 图标配置
             sideApps: [
                 { id: 'messenger', name: 'Dialogue', icon: 'ri-message-3-line' }, 
                 { id: 'profile',   name: 'Identity', icon: 'ri-passport-line' },
@@ -54,13 +67,12 @@ const DesktopModule = {
     },
     computed: { currentEditPhoto() { return this.photoWall.find(p => p.id === this.photoSettings.currentEditId); } },
     methods: {
-        // === 数据持久化 ===
         saveData() {
             const dataToSave = {
                 userAvatar: this.userAvatar, headerText: this.headerText, todos: this.todos,
                 heroSettings: this.heroSettings, photoWall: this.photoWall,
                 photoSettings: { ...this.photoSettings, currentEditId: null },
-                countdown: { ...this.countdown, showEditor: false } // 记得保存 countdown
+                countdown: { ...this.countdown, showEditor: false }
             };
             try { localStorage.setItem('ai_phone_data', JSON.stringify(dataToSave)); } catch (e) {}
         },
@@ -77,11 +89,10 @@ const DesktopModule = {
                     if(parsed.countdown) Object.assign(this.countdown, parsed.countdown);
                 } catch(e) { this.userAvatar = this.defaultAvatar; }
             } else { this.userAvatar = this.defaultAvatar; }
-            this.calculateCountdown(); // 加载后立即计算
+            this.calculateCountdown();
         },
         fileToBase64(file) { return new Promise((r, j) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => r(reader.result); reader.onerror = e => j(e); }); },
 
-        // === 基础功能 ===
         updateTime() {
             const now = new Date();
             this.timeString = `${now.getHours().toString().padStart(2, '0')} : ${now.getMinutes().toString().padStart(2, '0')}`;
@@ -101,9 +112,8 @@ const DesktopModule = {
         
         triggerAvatarUpload() { document.getElementById('avatar-upload').click(); },
         async handleAvatarUpload(e) { if(e.target.files[0]) { this.userAvatar = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
-        openApp(id) { console.log("Open:", id); }, // 这里可以加上 this.currentApp = id; 哪怕现在还没做页面
+        openApp(id) { console.log("Open:", id); },
 
-        // === Hero Editor ===
         handleContextMenu() { this.openEditor(); },
         handleTouchStart() { this.longPressTimer = setTimeout(() => { this.openEditor(); }, 800); },
         handleTouchEnd() { clearTimeout(this.longPressTimer); },
@@ -123,7 +133,6 @@ const DesktopModule = {
             this.saveData(); 
         },
 
-        // === Photo Editor ===
         handlePhotoContextMenu() { this.showPhotoEditor = true; },
         handlePhotoTouchStart() { this.longPressTimer = setTimeout(() => { this.showPhotoEditor = true; }, 800); },
         closePhotoEditor() { this.showPhotoEditor = false; this.photoSettings.currentEditId = null; this.saveData(); },
@@ -150,7 +159,6 @@ const DesktopModule = {
         async handlePhotoBgUpload(e) { if(e.target.files[0]) { this.photoSettings.bgImage = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
         deletePhotoBg() { this.photoSettings.bgImage = ''; },
 
-        // === 倒数日逻辑 (之前这里少了个逗号) ===
         calculateCountdown() {
             const target = new Date(this.countdown.targetDate);
             const today = new Date();
@@ -180,7 +188,6 @@ const DesktopModule = {
         this.updateTime(); 
         setInterval(this.updateTime, 1000); 
         this.initBattery();
-        // 挂载时计算一次倒数日
         this.calculateCountdown();
     }
 };
