@@ -124,6 +124,39 @@
                     <div class="app-item" v-for="app in extraApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon"><i :class="app.icon"></i></div><span class="app-name">{{ app.name }}</span></div>
                 </div>
 
+                <!-- === 新增：倒数日组件 === -->
+                <div class="countdown-widget" @click="openCountdownEditor">
+                    <div class="countdown-left">
+                        <span class="countdown-title">{{ countdown.title }}</span>
+                        <!-- 根据是过去还是未来显示不同文案 -->
+                        <span class="countdown-label">{{ countdown.isFuture ? '还有' : '已经' }}</span>
+                    </div>
+                    <div class="countdown-right">
+                        <span class="countdown-number">{{ countdown.days }}</span>
+                        <span class="countdown-unit">Days</span>
+                    </div>
+                </div>
+
+                <!-- === 倒数日编辑器弹窗 === -->
+                <div v-if="countdown.showEditor" class="editor-modal-overlay" @click.self="closeCountdownEditor">
+                    <div class="editor-panel" style="height:auto; padding-bottom:30px;">
+                        <div class="editor-title">纪念日设置</div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">标题 (例如: 恋爱纪念日)</div>
+                            <input type="text" v-model="countdown.title" class="modal-input" placeholder="输入标题">
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">日期</div>
+                            <input type="date" v-model="countdown.targetDate" class="modal-input">
+                        </div>
+
+                        <button class="btn-close" @click="closeCountdownEditor" style="margin-top:20px;">确定</button>
+                    </div>
+                </div>
+
+
                 <div class="dock-container"><div class="app-item" v-for="app in dockApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon dock-icon"><i :class="app.icon"></i></div></div></div>
 
                 <!-- Photo Editor -->

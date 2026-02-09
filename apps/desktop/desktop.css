@@ -27,270 +27,118 @@
     position: relative;
     overflow: hidden;
     color: white;
-    margin-bottom: 25px;
+    /* 减小下边距，把整体往上拉 */
+    margin-bottom: 15px; 
     cursor: pointer;
     user-select: none;
 }
 
 .hero-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: transparent;
-    z-index: 0;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: transparent; z-index: 0; pointer-events: none;
 }
 
 /* --- Hero 左侧 --- */
 .hero-left {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    z-index: 1;
+    flex: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; z-index: 1;
 }
 
-/* 头像容器 */
 .clock-ring-container {
-    width: 90px;
-    height: 90px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* 不限制 overflow，让 SVG 圆环完整显示 */
+    width: 90px; height: 90px; position: relative; display: flex; justify-content: center; align-items: center;
 }
 
-/* 蒙版层 (裁剪头像) */
 .avatar-mask {
-    position: absolute; /* 绝对定位，叠在SVG下面或中间 */
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%); /* 居中 */
-    width: 76px; height: 76px;
-    border-radius: 50%;
-    overflow: hidden; /* 关键 */
-    -webkit-mask-image: -webkit-radial-gradient(white, black);
-    z-index: 1; 
-    border: 2px solid rgba(255,255,255,0.1);
-    background: transparent;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 76px; height: 76px; border-radius: 50%; overflow: hidden; z-index: 1;
+    border: 2px solid rgba(255,255,255,0.1); background: transparent;
 }
 
-.avatar-empty-clickable {
-    width: 100%;
-    height: 100%;
-    background: transparent; 
-    cursor: pointer;
-}
-
-.avatar-empty-clickable:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
+.avatar-empty-clickable { width: 100%; height: 100%; background: transparent; cursor: pointer; }
+.avatar-empty-clickable:hover { background: rgba(255, 255, 255, 0.1); }
 
 .clock-svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    transform: rotate(-90deg);
-    z-index: 2;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); z-index: 2; pointer-events: none;
 }
 
 .user-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    cursor: pointer;
-    /* 缩放和位移由内联样式控制 */
-    transform-origin: center center;
-    transition: transform 0.1s linear;
+    width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; transform-origin: center center; transition: transform 0.1s linear;
 }
 
-/* 电量区域 */
 .battery-area {
-    margin-top: 25px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-family: "Varela Round", sans-serif;
-    font-size: 11px;
-    opacity: 0.9;
+    margin-top: 25px; display: flex; align-items: center; gap: 15px; font-family: "Varela Round", sans-serif; font-size: 11px; opacity: 0.9;
 }
 
 .battery-icon-shell {
-    width: 15px;
-    height: 10px;
-    border: 1.5px solid white;
-    border-radius: 4px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 1px;
+    width: 18px; height: 9px; border: 1.5px solid white; border-radius: 4px; position: relative; display: flex; align-items: center; padding: 1px;
 }
 
-.battery-fill {
-    height: 100%;
-    background: white;
-    border-radius: 2px;
-    transition: width 0.5s;
-}
+.battery-fill { height: 100%; background: white; border-radius: 2px; transition: width 0.5s; }
 
 /* --- Hero 右侧 --- */
 .hero-right {
-    flex: 3;
-    padding: 15px 15px 15px 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    z-index: 1;
+    flex: 3; padding: 15px 15px 15px 30px; display: flex; flex-direction: column; justify-content: center; z-index: 1;
 }
 
 .header-input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: white;
-    font-family: inherit;
-    font-size: 13px;
-    font-style: italic;
-    opacity: 0.9;
-    margin-bottom: 2px;
-    cursor: text;
+    width: 100%; background: transparent; border: none; outline: none; color: white; font-family: inherit; font-size: 13px; font-style: italic; opacity: 0.9; margin-bottom: 2px; cursor: text;
 }
 
-.time-display {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    line-height: 1;
-}
+.time-display { display: flex; align-items: baseline; gap: 8px; line-height: 1; }
+.big-time { font-size: 46px; font-family: 'Times New Roman', serif; font-style: italic; font-weight: 500; letter-spacing: -2px; text-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.date-info { font-size: 11px; margin-bottom: 8px; opacity: 0.8; font-family: 'Times New Roman', serif; font-style: italic; }
+.fancy-day { font-family: cursive; font-size: 12px; margin-left: 5px; }
 
-.big-time {
-    font-size: 46px;
-    font-family: 'Times New Roman', serif;
-    font-style: italic;
-    font-weight: 500;
-    letter-spacing: -2px;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.date-info {
-    font-size: 11px;
-    margin-bottom: 8px;
-    opacity: 0.8;
-    font-family: 'Times New Roman', serif;
-    font-style: italic;
-}
-
-.fancy-day {
-    font-family: cursive;
-    font-size: 12px;
-    margin-left: 5px;
-}
-
-.todo-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.todo-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-}
-
-.heart-icon {
-    cursor: pointer;
-    font-size: 12px;
-    width: 14px;
-    text-align: center;
-    transition: transform 0.2s;
-}
-
-.heart-icon:active {
-    transform: scale(0.8);
-}
-
-.todo-input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: white;
-    width: 100%;
-    font-size: 12px;
-    opacity: 0.85;
-    cursor: text;
-}
-
-.todo-input::placeholder {
-    color: rgba(255,255,255,0.5);
-}
-
-.todo-item.done .todo-input {
-    text-decoration: line-through;
-    opacity: 0.5;
-}
+.todo-list { display: flex; flex-direction: column; gap: 4px; }
+.todo-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.heart-icon { cursor: pointer; font-size: 12px; width: 14px; text-align: center; transition: transform 0.2s; }
+.heart-icon:active { transform: scale(0.8); }
+.todo-input { background: transparent; border: none; outline: none; color: white; width: 100%; font-size: 12px; opacity: 0.85; cursor: text; }
+.todo-input::placeholder { color: rgba(255,255,255,0.5); }
+.todo-item.done .todo-input { text-decoration: line-through; opacity: 0.5; }
 
 /* === 2. 统一布局网格 (Main Layout Grid) === */
 .main-layout-area {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    row-gap: 15px;
+    margin-top: 30px; 
+    row-gap: 10px; 
     column-gap: 10px;
     padding: 0 5px;
-    margin-bottom: 100px;
+    margin-bottom: 20px; 
     z-index: 1;
 }
 
 /* === 3. 照片墙组件 (Photo Widget) === */
-/* 外层包装，负责 Grid 定位 */
 .photo-grid-wrapper {
     grid-column: 2 / 5;
     grid-row: span 2;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: flex; flex-direction: column; gap: 8px;
 }
 
 .photo-widget {
     width: 100%;
-    height: 140px;
+    /* 稍微调低高度，让出空间 */
+    height: 145px; 
+    
     background-color: rgba(255, 255, 255, 0.25);
-    background-repeat: no-repeat;
-    background-position: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 24px;
-    box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    user-select: none;
+    background-repeat: no-repeat; background-position: center;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 24px;
+    box-sizing: border-box; overflow: hidden; position: relative;
+    display: flex; flex-direction: column; justify-content: flex-start; /* 顶部对齐 */
+    padding-top: 8px; /* 顶部内边距 */
+    gap: 8px; /* 两行间距 */
+    cursor: pointer; user-select: none;
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    padding: 0;
 }
 
 .photo-row {
-    width: 100%;
-    height: 62px;
-    position: relative;
-    overflow: hidden;
+    width: 100%; 
+    height: 62px; /* 调小单行高度 */
+    position: relative; overflow: hidden;
     mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
-.photo-track {
-    display: flex;
-    width: max-content;
-}
+.photo-track { display: flex; width: max-content; }
 
 .scroll-group {
     display: flex;
@@ -300,8 +148,9 @@
 }
 
 .photo-row.bottom .scroll-group {
-    animation-duration: 25s;
-    animation-delay: -5s;
+    animation-name: scroll-seamless-right; 
+    animation-duration: 25s; 
+    animation-delay: -5s; 
 }
 
 @keyframes scroll-seamless {
@@ -309,283 +158,114 @@
     100% { transform: translateX(-100%); }
 }
 
-.photo-item {
-    height: 62px;
-    object-fit: cover;
-    border-radius: 8px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-right: 0;
+@keyframes scroll-seamless-right {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
 }
 
-.photo-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 12px;
-    opacity: 0.8;
+.photo-item { 
+    height: 62px; /* 匹配行高 */
+    object-fit: cover; border-radius: 8px; flex-shrink: 0; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-right: 0; 
 }
 
-/* 照片墙外部标题 */
+.photo-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-size: 12px; opacity: 0.8; }
+
 .photo-title-outside {
-    width: 100%;
-    text-align: right;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-size: 12px;
-    color: var(--text-main);
-    font-weight: normal;
-    padding-right: 5px;
-    box-sizing: border-box;
-    cursor: text;
+    width: 100%; text-align: right; background: transparent; border: none; outline: none;
+    font-size: 12px; color: var(--text-main); font-weight: normal; padding-right: 5px; box-sizing: border-box; cursor: text;
 }
-
-.photo-title-outside:focus {
-    border-bottom: 1px solid var(--accent-orange);
-}
+.photo-title-outside:focus { border-bottom: 1px solid var(--accent-orange); }
 
 /* === 4. App 图标 === */
 .app-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.1s;
-    height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.1s; height: 100%;
 }
-
-.app-item:active {
-    transform: scale(0.95);
-}
+.app-item:active { transform: scale(0.95); }
 
 .app-icon {
-    width: 56px; height: 56px;
-    /* 核心：半透明白底 + 磨砂 */
+    /* 缩小图标尺寸 */
+    width: 52px; height: 52px; 
+    
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255,255,255,0.4);
     
     border-radius: 18px;
     display: flex; justify-content: center; align-items: center;
     
-    /* 图标用深色 */
     color: #ff9a8b; 
-    font-size: 26px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* 极淡的阴影 */
-    margin-bottom: 6px;
-}
-
-
-.app-name {
-    font-size: 12px;
-    color: var(--text-main);
-}
-
-/* 扩展应用网格 */
-.extra-apps-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 25px;
-    padding: 0 5px;
-    z-index: 1;
-}
-
-/* === 5. 编辑器通用样式 === */
-.editor-modal-overlay {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4);
-    z-index: 2000;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-}
-
-.editor-panel {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(25px);
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-    padding: 20px;
-    box-sizing: border-box;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
-
-.editor-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 15px;
-    text-align: center;
-}
-
-/* 编辑器内部网格布局 */
-.editor-controls-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.editor-section-full {
-    grid-column: span 2;
-}
-
-.control-group {
-    margin-bottom: 10px;
-}
-
-.control-label {
-    font-size: 11px;
-    color: #666;
+    font-size: 24px; /* 缩小字号 */
+    
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     margin-bottom: 4px;
-    display: flex;
-    justify-content: space-between;
+    transition: all 0.2s;
 }
+.app-item:hover .app-icon { background: rgba(255, 255, 255, 0.5); transform: translateY(-2px); }
+.app-name { font-size: 12px; color: var(--text-main); }
 
-.slider-input {
-    width: 100%;
-    -webkit-appearance: none;
-    height: 4px;
-    background: #ddd;
-    border-radius: 2px;
-    outline: none;
-    touch-action: none; /* 防止拖动滑块时页面跟着跑 */
+/* === 5. 倒数日组件 === */
+.countdown-widget {
+    grid-column: 1 / 5; /* 跨4列 */
+    
+    height: 70px;
+    width: auto; 
+    margin-left: 15px;  
+    margin-right: 15px;
+    background-color: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 25px;
+    margin: 0;
+    
+    /* 给上面加一点点间距，稍微分开上面的图标 */
+    margin-top: -5px; 
+    
+    cursor: pointer; user-select: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.1s;
 }
+.countdown-widget:active { transform: scale(0.98); }
+.countdown-left { display: flex; flex-direction: column; justify-content: center; }
+.countdown-title { font-size: 14px; color: var(--text-main); font-weight: bold; letter-spacing: 1px; opacity: 0.8; }
+.countdown-label { font-size: 10px; color: var(--text-main); opacity: 0.5; margin-top: 2px; }
+.countdown-right { display: flex; align-items: baseline; color: var(--accent-orange); }
+.countdown-number { font-size: 36px; font-family: 'Times New Roman', serif; font-style: italic; font-weight: 500; line-height: 1; }
+.countdown-unit { font-size: 12px; margin-left: 4px; font-weight: bold; opacity: 0.8; }
+.modal-input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; background: rgba(255,255,255,0.8); font-family: inherit; box-sizing: border-box; }
 
-.slider-input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--accent-orange);
-    cursor: pointer;
-}
+/* === 6. 编辑器通用样式 === */
+.editor-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; justify-content: center; align-items: flex-end; }
+.editor-panel { width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(25px); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px; box-sizing: border-box; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.editor-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px; text-align: center; }
+.editor-controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.editor-section-full { grid-column: span 2; }
+.control-group { margin-bottom: 10px; }
+.control-label { font-size: 11px; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.slider-input { width: 100%; -webkit-appearance: none; height: 4px; background: #ddd; border-radius: 2px; outline: none; touch-action: none; }
+.slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-orange); cursor: pointer; }
+.color-picker-row { display: flex; gap: 10px; align-items: center; }
+.color-input { border: none; width: 40px; height: 40px; cursor: pointer; background: none; padding: 0; }
+.btn-reset { font-size: 12px; color: var(--accent-orange); cursor: pointer; border: 1px solid var(--accent-orange); padding: 4px 8px; border-radius: 4px; }
+.btn-close { width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+.delete-actions { display: flex; gap: 10px; margin-bottom: 15px; }
+.btn-delete { flex: 1; padding: 10px; border: 1px solid #ff4757; color: #ff4757; background: rgba(255, 71, 87, 0.05); border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; }
+.btn-back { padding: 5px 10px; background: #eee; border-radius: 8px; cursor: pointer; font-size: 12px; margin-bottom: 10px; display: inline-block; color: #666; font-weight: bold; }
+.photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; overflow-y: auto; max-height: 200px; padding: 5px; }
+.grid-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 2px solid #eee; cursor: pointer; }
+.grid-item.active { border-color: var(--accent-orange); }
+.grid-img { width: 100%; height: 100%; object-fit: cover; }
+.grid-num { display: none; }
+.grid-add { border: 2px dashed #ccc; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 
-.color-picker-row {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.color-input {
-    border: none;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    background: none;
-    padding: 0;
-}
-
-.btn-reset {
-    font-size: 12px;
-    color: var(--accent-orange);
-    cursor: pointer;
-    border: 1px solid var(--accent-orange);
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.btn-close {
-    width: 100%;
-    padding: 12px;
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.delete-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.btn-delete {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ff4757;
-    color: #ff4757;
-    background: rgba(255, 71, 87, 0.05);
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-}
-
-.btn-back {
-    padding: 5px 10px;
-    background: #eee;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    margin-bottom: 10px;
-    display: inline-block;
-    color: #666;
-    font-weight: bold;
-}
-
-/* 照片墙管理网格 */
-.photo-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    overflow-y: auto;
-    max-height: 200px;
-    padding: 5px;
-}
-
-.grid-item {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 2px solid #eee;
-    cursor: pointer;
-}
-
-.grid-item.active {
-    border-color: var(--accent-orange);
-}
-
-.grid-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.grid-num {
-    display: none;
-}
-
-.grid-add {
-    border: 2px dashed #ccc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-}
-
-/* === 6. Dock 栏 === */
+/* === 7. Dock 栏 === */
 .dock-container {
     position: absolute;
     bottom: 30px;
