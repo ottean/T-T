@@ -17,149 +17,245 @@
 
             <div v-if="currentApp === 'desktop'" class="desktop-container">
                 
-                <!-- Hero Widget -->
-                <div class="hero-widget"
-                     :style="{ 
-                        backgroundImage: heroSettings.bgImage ? 'url(' + heroSettings.bgImage + ')' : '', 
-                        backgroundPosition: heroSettings.bgPosX + '% ' + heroSettings.bgPosY + '%',
-                        backgroundSize: heroSettings.bgSize + '%',
-                        color: heroSettings.textColor 
-                     }"
-                     @contextmenu.prevent="handleContextMenu" @touchstart="handleTouchStart" @touchend="handleTouchEnd" @click="triggerHeroBgUpload">
-                    <div class="hero-overlay"></div>
-                    <input type="file" id="hero-bg-upload" accept="image/*" @change="handleHeroBgUpload" style="display:none">
-                    <div class="hero-left">
-                        <div class="clock-ring-container">
-                            <svg class="clock-svg" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="47" fill="none" :stroke="heroSettings.textColor" stroke-opacity="0.2" stroke-width="3" />
-                                <circle cx="50" cy="50" r="47" fill="none" :stroke="heroSettings.textColor" stroke-width="4" stroke-linecap="round" :stroke-dasharray="ringCircumference" :stroke-dashoffset="ringOffset" style="transition: stroke-dashoffset 1s linear;" />
-                            </svg>
-                            <!-- 头像蒙版层 -->
-                            <div class="avatar-mask">
-                                <img v-if="userAvatar" 
-                                     :src="userAvatar" 
-                                     class="user-avatar" 
-                                     @click.stop="triggerAvatarUpload"
-                                     :style="{ 
-                                        transform: `translate(${(heroSettings.avatarPosX - 50)}%, ${(heroSettings.avatarPosY - 50)}%) scale(${heroSettings.avatarSize / 100})`
-                                     }">
-                                <div v-else 
-                                     class="avatar-empty-clickable" 
-                                     @click.stop="triggerAvatarUpload">
+                <!-- === 第一层：横向滚动视窗 (Swiper) === -->
+                <div class="desktop-swiper" ref="swiper" @scroll="handleScroll">
+                    
+                    <!-- === PAGE 1: 主页 (Hero + Widgets) === -->
+                    <div class="desktop-page">
+                        
+                        <!-- Hero Widget -->
+                        <!-- 改动：移除长按逻辑，改为点击直接 openEditor -->
+                        <div class="hero-widget"
+                             :style="{ 
+                                backgroundImage: heroSettings.bgImage ? 'url(' + heroSettings.bgImage + ')' : '', 
+                                backgroundPosition: heroSettings.bgPosX + '% ' + heroSettings.bgPosY + '%',
+                                backgroundSize: heroSettings.bgSize + '%',
+                                color: heroSettings.textColor 
+                             }"
+                             @click="openEditor">
+                             
+                            <div class="hero-overlay"></div>
+                            
+                            <!-- 左侧 -->
+                            <div class="hero-left">
+                                <!-- 改动：移除 click.stop，点击这里也属于打开编辑器 -->
+                                <div class="clock-ring-container">
+                                    <svg class="clock-svg" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="47" fill="none" :stroke="heroSettings.textColor" stroke-opacity="0.2" stroke-width="3" />
+                                        <circle cx="50" cy="50" r="47" fill="none" :stroke="heroSettings.textColor" stroke-width="4" stroke-linecap="round" :stroke-dasharray="ringCircumference" :stroke-dashoffset="ringOffset" style="transition: stroke-dashoffset 1s linear;" />
+                                    </svg>
+                                    
+                                    <div class="avatar-mask">
+                                        <img v-if="userAvatar" 
+                                             :src="userAvatar" 
+                                             class="user-avatar" 
+                                             :style="{ 
+                                                transform: `translate(${(heroSettings.avatarPosX - 50)}%, ${(heroSettings.avatarPosY - 50)}%) scale(${heroSettings.avatarSize / 100})`
+                                             }">
+                                        <div v-else class="avatar-empty-clickable"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="battery-area">
+                                    <span>电量: {{ batteryLevel }}%</span>
+                                    <div class="battery-icon-shell" :style="{ borderColor: heroSettings.textColor }"><div class="battery-fill" :style="{ background: heroSettings.textColor, width: batteryLevel + '%' }"></div></div>
                                 </div>
                             </div>
-                            <input type="file" id="avatar-upload" accept="image/*" @change="handleAvatarUpload" style="display:none">
+
+                            <!-- 右侧 -->
+                            <div class="hero-right">
+                                <!-- 文本输入框保留 stop 修饰符，防止误触打开编辑器 -->
+                                <input v-model="headerText" class="header-input" :style="{ color: heroSettings.textColor }" @click.stop @change="saveData">
+                                <div class="time-display"><div class="big-time">{{ timeString }}</div></div>
+                                <div class="date-info">{{ dateString }} <span class="fancy-day">{{ dayString }}</span></div>
+                                <div class="todo-list">
+                                    <div class="todo-item" v-for="(todo, index) in todos" :key="todo.id" :class="{ done: todo.done }">
+                                        <i class="heart-icon" :class="todo.done ? 'ri-heart-fill' : 'ri-heart-line'" @click.stop="toggleTodo(index)"></i>
+                                        <input v-model="todo.text" class="todo-input" :style="{ color: heroSettings.textColor }" placeholder="待办..." @click.stop @change="saveData">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="battery-area">
-                            <span>电量: {{ batteryLevel }}%</span>
-                            <div class="battery-icon-shell" :style="{ borderColor: heroSettings.textColor }"><div class="battery-fill" :style="{ background: heroSettings.textColor, width: batteryLevel + '%' }"></div></div>
+
+                        <!-- Main Layout -->
+                        <div class="main-layout-area">
+                            
+                            <!-- Row 1: 顶部两个宽图标 -->
+                            <div v-if="sideApps[0]" class="app-item col-span-2" style="grid-row: 1;" @click="openApp(sideApps[0].id)">
+                                <div class="app-icon"><i :class="sideApps[0].icon"></i></div>
+                            </div>
+                            <div v-if="sideApps[1]" class="app-item col-span-2" style="grid-row: 1;" @click="openApp(sideApps[1].id)">
+                                <div class="app-icon"><i :class="sideApps[1].icon"></i></div>
+                            </div>
+
+                            <!-- Row 2-3: 照片墙 -->
+                            <div class="photo-grid-wrapper" style="grid-column: 1 / 5; grid-row: 2 / span 2;">
+                                <!-- 改动：点击直接打开编辑器，去掉了长按相关 -->
+                                <div class="photo-widget" @click="openPhotoEditor">
+                                     <input type="file" id="photo-wall-upload" multiple accept="image/*" @change="handlePhotoUpload" style="display:none">
+                                     <template v-if="photoWall.length > 0">
+                                         <div class="photo-row"><div class="photo-track"><div class="scroll-group"><img v-for="p in photoWall" :key="'a-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div><div class="scroll-group"><img v-for="p in photoWall" :key="'b-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div></div></div>
+                                         <div class="photo-row bottom"><div class="photo-track"><div class="scroll-group"><img v-for="p in photoWall" :key="'ba-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div><div class="scroll-group"><img v-for="p in photoWall" :key="'bb-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div></div></div>
+                                     </template>
+                                     <div v-else class="photo-placeholder">
+                                         <i class="ri-image-add-line" style="font-size: 24px; color: var(--text-main);"></i>
+                                         <div style="font-size:10px; color:var(--text-main); opacity:0.6; margin-top:5px;">管理照片</div>
+                                     </div>
+                                </div>
+                                <input v-model="photoSettings.title" class="photo-title-outside" placeholder="TITLE" @click.stop @change="saveData">
+                            </div>
+
+                            <!-- Row 4-5: 底部混合布局 -->
+                            <div v-if="extraApps[0]" class="app-item" style="grid-column: 1; grid-row: 4;" @click="openApp(extraApps[0].id)">
+                                <div class="app-icon"><i :class="extraApps[0].icon"></i></div>
+                                <span class="app-name">{{ extraApps[0].name }}</span>
+                            </div>
+                            <div v-if="extraApps[1]" class="app-item" style="grid-column: 1; grid-row: 5;" @click="openApp(extraApps[1].id)">
+                                <div class="app-icon"><i :class="extraApps[1].icon"></i></div>
+                                <span class="app-name">{{ extraApps[1].name }}</span>
+                            </div>
+                            
+                            <!-- 倒数日组件 -->
+                            <div class="countdown-widget" 
+                                 style="grid-column: 2 / 5; grid-row: 4 / span 2;" 
+                                 :style="{ 
+                                    backgroundImage: countdown.bgImage ? 'url(' + countdown.bgImage + ')' : '',
+                                    backgroundPosition: countdown.bgPosX + '% ' + countdown.bgPosY + '%',
+                                    backgroundSize: countdown.bgSize + '%',
+                                    color: countdown.textColor
+                                 }"
+                                 @click="openCountdownEditor">
+                                <div v-if="countdown.bgImage" style="position:absolute; inset:0; background:rgba(255,255,255,0.2); border-radius:24px; pointer-events:none;"></div>
+                                <div class="countdown-left" style="position:relative; z-index:1;">
+                                    <span class="countdown-title" :style="{ color: countdown.textColor }">{{ countdown.title }}</span>
+                                    <span class="countdown-label" :style="{ color: countdown.textColor, borderColor: countdown.textColor }">{{ countdown.isFuture ? '还有' : '已经' }}</span>
+                                </div>
+                                <div class="countdown-right" style="position:relative; z-index:1;">
+                                    <span class="countdown-number" :style="{ color: countdown.textColor }">{{ countdown.days }}</span>
+                                    <span class="countdown-unit" :style="{ color: countdown.textColor }">Days</span>
+                                </div>
+                            </div>
+
                         </div>
-                    </div>
-                    <div class="hero-right">
-                        <input v-model="headerText" class="header-input" :style="{ color: heroSettings.textColor }" @click.stop @change="saveData">
-                        <div class="time-display"><div class="big-time">{{ timeString }}</div></div>
-                        <div class="date-info">{{ dateString }} <span class="fancy-day">{{ dayString }}</span></div>
-                        <div class="todo-list">
-                            <div class="todo-item" v-for="(todo, index) in todos" :key="todo.id" :class="{ done: todo.done }">
-                                <i class="heart-icon" :class="todo.done ? 'ri-heart-fill' : 'ri-heart-line'" @click.stop="toggleTodo(index)"></i>
-                                <input v-model="todo.text" class="todo-input" :style="{ color: heroSettings.textColor }" placeholder="待办..." @click.stop @change="saveData">
+                    </div> <!-- End Page 1 -->
+
+                    <!-- PAGE 2 (保持原样) -->
+                    <div class="desktop-page">
+                        <div class="main-layout-area" style="margin-top: 10px;">
+                            <div class="app-item" v-for="app in page2Apps" :key="app.id" @click="openApp(app.id)">
+                                <div class="app-icon"><i :class="app.icon"></i></div>
+                                <span class="app-name">{{ app.name }}</span>
                             </div>
                         </div>
                     </div>
+                </div> <!-- End Swiper -->
+
+                <!-- Pagination Dots -->
+                <div class="pagination-dots">
+                    <span class="dot" :class="{ active: currentPage === 0 }" @click="scrollToPage(0)"></span>
+                    <span class="dot" :class="{ active: currentPage === 1 }" @click="scrollToPage(1)"></span>
                 </div>
 
-                <!-- Hero Editor -->
+                <!-- Dock -->
+                <div class="dock-container"><div class="app-item" v-for="app in dockApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon dock-icon"><i :class="app.icon"></i></div></div></div>
+
+                <!-- === Modals: Hero Editor (重构版) === -->
                 <div v-if="showEditor" class="editor-modal-overlay" @click.self="closeEditor">
                     <div class="editor-panel">
                         <div class="editor-title">卡片个性化</div>
                         
-                        <div class="delete-actions">
-                            <div v-if="heroSettings.bgImage" class="btn-delete" @click="deleteBg">删除背景图</div>
-                            <!-- 修复：常驻显示，用于重置位置 -->
-                            <div class="btn-delete" @click="deleteAvatar">删除头像</div>
-                        </div>
-                        
-                        <div class="editor-controls-grid">
-                            <!-- 背景列 -->
-                            <div class="editor-column" v-if="heroSettings.bgImage">
-                                <div class="control-label" style="font-weight:bold;">背景设置</div>
-                                <div class="control-group"><div class="control-label">缩放 ({{ heroSettings.bgSize }}%)</div><input type="range" v-model="heroSettings.bgSize" min="50" max="300" class="slider-input"></div>
-                                <div class="control-group"><div class="control-label">X轴 ({{ heroSettings.bgPosX }}%)</div><input type="range" v-model="heroSettings.bgPosX" min="0" max="100" class="slider-input"></div>
-                                <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.bgPosY }}%)</div><input type="range" v-model="heroSettings.bgPosY" min="0" max="100" class="slider-input"></div>
+                        <!-- 隐藏的文件上传 input -->
+                        <input type="file" id="hero-bg-upload" accept="image/*" @change="handleHeroBgUpload" style="display:none">
+                        <input type="file" id="avatar-upload" accept="image/*" @change="handleAvatarUpload" style="display:none">
+
+                        <!-- 动态按钮组 -->
+                        <div class="hero-actions-wrapper">
+                            
+                            <!-- 1. 背景操作行 -->
+                            <div class="editor-row">
+                                <!-- 如果没有背景：显示大上传按钮 -->
+                                <div v-if="!heroSettings.bgImage" class="btn-action full" @click="triggerHeroBgUpload">
+                                    上传背景图
+                                </div>
+                                <!-- 如果有背景：显示更换/删除按钮 -->
+                                <template v-else>
+                                    <div class="btn-action" @click="triggerHeroBgUpload">更换背景</div>
+                                    <div class="btn-delete" @click="deleteBg">删除背景</div>
+                                </template>
                             </div>
-                            <!-- 头像列 -->
-                            <div class="editor-column" :class="{ 'editor-section-full': !heroSettings.bgImage }">
-                                <div class="control-label" style="font-weight:bold;">头像设置</div>
-                                <div class="control-group"><div class="control-label">缩放 ({{ heroSettings.avatarSize }}%)</div><input type="range" v-model="heroSettings.avatarSize" min="50" max="200" class="slider-input"></div>
-                                <div class="control-group"><div class="control-label">X轴 ({{ heroSettings.avatarPosX }}%)</div><input type="range" v-model="heroSettings.avatarPosX" min="0" max="100" class="slider-input"></div>
-                                <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.avatarPosY }}%)</div><input type="range" v-model="heroSettings.avatarPosY" min="0" max="100" class="slider-input"></div>
+
+                            <!-- 2. 头像操作行 -->
+                            <div class="editor-row">
+                                <!-- 如果没有头像：显示大上传按钮 -->
+                                <div v-if="!userAvatar" class="btn-action full" @click="triggerAvatarUpload">
+                                    上传头像
+                                </div>
+                                <!-- 如果有头像：显示更换/删除按钮 -->
+                                <template v-else>
+                                    <div class="btn-action" @click="triggerAvatarUpload">更换头像</div>
+                                    <div class="btn-delete" @click="deleteAvatar">删除头像</div>
+                                </template>
                             </div>
                         </div>
 
+                        <!-- 3. 滑动条控制区 (保持 v-if 互斥逻辑) -->
+                        <div class="editor-controls-grid" style="margin-top:15px;">
+                            <!-- 背景滑块 -->
+                            <div class="editor-column" v-if="heroSettings.bgImage" :class="{ 'editor-section-full': !userAvatar }">
+                                <div class="control-label" style="font-weight:bold;">背景调整</div>
+                                <div class="control-group"><div class="control-label">缩放 ({{ heroSettings.bgSize }}%)</div><input type="range" v-model="heroSettings.bgSize" min="50" max="300" class="slider-input" @change="saveData"></div>
+                                <div class="control-group"><div class="control-label">X轴 ({{ heroSettings.bgPosX }}%)</div><input type="range" v-model="heroSettings.bgPosX" min="0" max="100" class="slider-input" @change="saveData"></div>
+                                <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.bgPosY }}%)</div><input type="range" v-model="heroSettings.bgPosY" min="0" max="100" class="slider-input" @change="saveData"></div>
+                            </div>
+                            <!-- 头像滑块 -->
+                            <div class="editor-column" v-if="userAvatar" :class="{ 'editor-section-full': !heroSettings.bgImage }">
+                                <div class="control-label" style="font-weight:bold;">头像调整</div>
+                                <div class="control-group"><div class="control-label">缩放 ({{ heroSettings.avatarSize }}%)</div><input type="range" v-model="heroSettings.avatarSize" min="50" max="200" class="slider-input" @change="saveData"></div>
+                                <div class="control-group"><div class="control-label">X轴 ({{ heroSettings.avatarPosX }}%)</div><input type="range" v-model="heroSettings.avatarPosX" min="0" max="100" class="slider-input" @change="saveData"></div>
+                                <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.avatarPosY }}%)</div><input type="range" v-model="heroSettings.avatarPosY" min="0" max="100" class="slider-input" @change="saveData"></div>
+                            </div>
+                        </div>
+
+                        <!-- 颜色设置 -->
                         <div class="control-group" style="margin-top:10px;"><div class="control-label">字体颜色</div><div class="color-picker-row"><input type="color" v-model="heroSettings.textColor" class="color-input"><span class="btn-reset" @click="resetTextColor">重置</span></div></div>
-                        <button class="btn-close" @click="closeEditor">完成并保存</button>
+                        <button class="btn-close" @click="closeEditor">完成 (Done)</button>
                     </div>
                 </div>
 
-                <!-- Main Layout -->
-                <div class="main-layout-area">
-                    <div class="app-item" @click="openApp(sideApps[0].id)"><div class="app-icon"><i :class="sideApps[0].icon"></i></div><span class="app-name">{{ sideApps[0].name }}</span></div>
-
-                    <div class="photo-grid-wrapper">
-                        <div class="photo-widget"
-                             :style="{ backgroundImage: photoSettings.bgImage ? 'url(' + photoSettings.bgImage + ')' : '', backgroundPosition: photoSettings.bgPosX + '% ' + photoSettings.bgPosY + '%', backgroundSize: photoSettings.bgSize + '%' }"
-                             @contextmenu.prevent="handlePhotoContextMenu" @touchstart="handlePhotoTouchStart" @touchend="handleTouchEnd"
-                             @click="photoWall.length === 0 ? triggerPhotoUpload() : null">
-                            <input type="file" id="photo-wall-upload" multiple accept="image/*" @change="handlePhotoUpload" style="display:none">
-                            <template v-if="photoWall.length > 0">
-                                <div class="photo-row"><div class="photo-track"><div class="scroll-group"><img v-for="p in photoWall" :key="'a-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div><div class="scroll-group"><img v-for="p in photoWall" :key="'b-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div></div></div>
-                                <div class="photo-row bottom"><div class="photo-track"><div class="scroll-group"><img v-for="p in photoWall" :key="'ba-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div><div class="scroll-group"><img v-for="p in photoWall" :key="'bb-'+p.id" :src="p.url" class="photo-item" :style="{ width: p.width + 'px', objectPosition: 'center ' + p.y + '%' }"></div></div></div>
-                            </template>
-                            <div v-else class="photo-placeholder"><i class="ri-image-add-line" style="font-size: 24px; margin-bottom: 5px;"></i><div>上传照片</div></div>
-                        </div>
-                        <input v-model="photoSettings.title" class="photo-title-outside" placeholder="TITLE" @click.stop @change="saveData">
-                    </div>
-
-                    <div class="app-item" @click="openApp(sideApps[1].id)"><div class="app-icon"><i :class="sideApps[1].icon"></i></div><span class="app-name">{{ sideApps[1].name }}</span></div>
-                    <div class="app-item" v-for="app in extraApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon"><i :class="app.icon"></i></div><span class="app-name">{{ app.name }}</span></div>
-                </div>
-
-                <!-- === 新增：倒数日组件 === -->
-                <div class="countdown-widget" @click="openCountdownEditor">
-                    <div class="countdown-left">
-                        <span class="countdown-title">{{ countdown.title }}</span>
-                        <!-- 根据是过去还是未来显示不同文案 -->
-                        <span class="countdown-label">{{ countdown.isFuture ? '还有' : '已经' }}</span>
-                    </div>
-                    <div class="countdown-right">
-                        <span class="countdown-number">{{ countdown.days }}</span>
-                        <span class="countdown-unit">Days</span>
-                    </div>
-                </div>
-
-                <!-- === 倒数日编辑器弹窗 === -->
+                <!-- Modals: Countdown Editor (底部弹出) -->
                 <div v-if="countdown.showEditor" class="editor-modal-overlay" @click.self="closeCountdownEditor">
-                    <div class="editor-panel" style="height:auto; padding-bottom:30px;">
+                    <div class="editor-panel">
                         <div class="editor-title">纪念日设置</div>
-                        
-                        <div class="control-group">
-                            <div class="control-label">标题 (例如: 恋爱纪念日)</div>
-                            <input type="text" v-model="countdown.title" class="modal-input" placeholder="输入标题">
+                        <div class="editor-controls-grid">
+                            <div class="control-group"><div class="control-label">标题</div><input type="text" v-model="countdown.title" class="modal-input" placeholder="输入标题" @change="saveData"></div>
+                            <div class="control-group"><div class="control-label">日期</div><input type="date" v-model="countdown.targetDate" class="modal-input" @change="saveData"></div>
                         </div>
-                        
-                        <div class="control-group">
-                            <div class="control-label">日期</div>
-                            <input type="date" v-model="countdown.targetDate" class="modal-input">
+                        <div class="delete-actions" style="margin-top:15px;">
+                            <div class="btn-delete" style="border-color:#ccc; color:#333; background:#eee;" @click="triggerCountdownBgUpload">
+                                {{ countdown.bgImage ? '更换图片' : '上传背景图' }}
+                                <input type="file" id="countdown-bg-upload" accept="image/*" @change="handleCountdownBgUpload" style="display:none">
+                            </div>
+                            <div v-if="countdown.bgImage" class="btn-delete" @click="deleteCountdownBg">删除背景</div>
                         </div>
-
-                        <button class="btn-close" @click="closeCountdownEditor" style="margin-top:20px;">确定</button>
+                        <div v-if="countdown.bgImage" class="editor-controls-grid">
+                            <div class="editor-section-full">
+                                <div class="control-group"><div class="control-label">缩放 ({{ countdown.bgSize }}%)</div><input type="range" v-model="countdown.bgSize" min="50" max="300" class="slider-input" @change="saveData"></div>
+                                <div class="control-group"><div class="control-label">X轴 ({{ countdown.bgPosX }}%)</div><input type="range" v-model="countdown.bgPosX" min="0" max="100" class="slider-input" @change="saveData"></div>
+                                <div class="control-group"><div class="control-label">Y轴 ({{ countdown.bgPosY }}%)</div><input type="range" v-model="countdown.bgPosY" min="0" max="100" class="slider-input" @change="saveData"></div>
+                            </div>
+                        </div>
+                        <div class="control-group" style="margin-top:10px;">
+                            <div class="control-label">文字颜色</div>
+                            <div class="color-picker-row">
+                                <input type="color" v-model="countdown.textColor" class="color-input" @change="saveData">
+                                <span class="btn-reset" @click="countdown.textColor = '#ff9a8b'; saveData()">重置</span>
+                            </div>
+                        </div>
+                        <button class="btn-close" @click="closeCountdownEditor" style="margin-top:15px;">完成 (Done)</button>
                     </div>
                 </div>
 
-
-                <div class="dock-container"><div class="app-item" v-for="app in dockApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon dock-icon"><i :class="app.icon"></i></div></div></div>
-
-                <!-- Photo Editor -->
+                <!-- Modals: Photo Editor -->
                 <div v-if="showPhotoEditor" class="editor-modal-overlay" @click.self="closePhotoEditor">
                     <div class="editor-panel">
                         <div class="editor-title" style="display:flex; justify-content:space-between;">
@@ -168,27 +264,25 @@
                             <span class="btn-close" style="width:auto; margin:0; padding:5px 12px;" @click="closePhotoEditor">关闭</span>
                         </div>
                         <div v-if="!photoSettings.currentEditId">
-                            <div class="delete-actions">
-                                <div class="btn-delete" style="border-color:#ccc; color:#333; background:#eee;" @click="triggerPhotoBgUpload">更换背景 <input type="file" id="photo-bg-upload" accept="image/*" @change="handlePhotoBgUpload" style="display:none"></div>
-                                <div v-if="photoSettings.bgImage" class="btn-delete" @click="deletePhotoBg">删除背景</div>
-                            </div>
-                            <div class="editor-controls-grid" v-if="photoSettings.bgImage">
-                                <div class="editor-section-full">
-                                    <div class="control-label" style="font-weight:bold;">背景设置</div>
-                                    <div class="control-group"><div class="control-label">缩放 ({{ photoSettings.bgSize }}%)</div><input type="range" v-model="photoSettings.bgSize" min="50" max="300" class="slider-input"></div>
-                                    <div class="control-group"><div class="control-label">X轴 ({{ photoSettings.bgPosX }}%)</div><input type="range" v-model="photoSettings.bgPosX" min="0" max="100" class="slider-input"></div>
-                                    <div class="control-group"><div class="control-label">Y轴 ({{ photoSettings.bgPosY }}%)</div><input type="range" v-model="photoSettings.bgPosY" min="0" max="100" class="slider-input"></div>
-                                </div>
-                            </div>
-                            <div class="control-label" style="margin-top:15px;">点击图片编辑细节</div>
+                            <div class="control-label">点击图片编辑细节</div>
                             <div class="photo-grid">
-                                <div class="grid-item" v-for="(p, index) in photoWall" :key="'grid-'+p.id" @click="selectPhotoToEdit(p.id)"><img :src="p.url" class="grid-img" :style="{ objectPosition: 'center ' + p.y + '%' }"></div>
-                                <div class="grid-item grid-add" @click="triggerPhotoUpload"><i class="ri-add-line" style="font-size:20px; color:#ccc;"></i></div>
+                                <div class="grid-item" v-for="(p, index) in photoWall" :key="'grid-'+p.id" @click="selectPhotoToEdit(p.id)">
+                                    <img :src="p.url" class="grid-img" :style="{ objectPosition: 'center ' + p.y + '%' }">
+                                </div>
+                                <div class="grid-item grid-add" @click="triggerPhotoUpload">
+                                    <i class="ri-add-line" style="font-size:20px; color:#ccc;"></i>
+                                </div>
                             </div>
                         </div>
                         <div v-else>
-                             <div class="control-group"><div class="control-label">显示宽度 ({{ currentEditPhoto.width }}px)</div><input type="range" v-model="currentEditPhoto.width" min="40" max="150" class="slider-input"></div>
-                            <div class="control-group"><div class="control-label">图片垂直位置 ({{ currentEditPhoto.y }}%)</div><input type="range" v-model="currentEditPhoto.y" min="0" max="100" class="slider-input"></div>
+                            <div class="control-group">
+                                <div class="control-label">显示宽度 ({{ currentEditPhoto.width }}px)</div>
+                                <input type="range" v-model="currentEditPhoto.width" min="40" max="150" class="slider-input" @change="saveData">
+                            </div>
+                            <div class="control-group">
+                                <div class="control-label">图片垂直位置 ({{ currentEditPhoto.y }}%)</div>
+                                <input type="range" v-model="currentEditPhoto.y" min="0" max="100" class="slider-input" @change="saveData">
+                            </div>
                             <div class="btn-delete" @click="deleteCurrentPhoto">删除这张照片</div>
                         </div>
                     </div>
@@ -196,7 +290,6 @@
 
             </div>
             
-            <!-- App Placeholder -->
             <div v-if="currentApp !== 'desktop'" style="padding:20px; text-align:center;">
                 <h1>APP: {{ currentApp }}</h1>
                 <button @click="currentApp = 'desktop'">返回桌面</button>

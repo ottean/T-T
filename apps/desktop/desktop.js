@@ -3,6 +3,7 @@
 const DesktopModule = {
     data() {
         return {
+            currentPage: 0, 
             // === 核心数据 ===
             widgetBg: '', 
             defaultAvatar: 'https://i.postimg.cc/dtz2dpnV/bookmark.png',
@@ -10,20 +11,18 @@ const DesktopModule = {
             timeString: '12:45', dateString: '2026.02.08', dayString: 'Sunday',
             ringCircumference: 295, ringOffset: 0, batteryLevel: 100, headerText: 'Ɛ Lovely Day ⸝⋆* .〰 ★',
             
-            // 待办文案更新
             todos: [
                 { id: 1, text: '给书签喂罐头', done: false },
-                { id: 2, text: '给Sean梳毛', done: false },
+                { id: 2, text: '帮Sean梳毛', done: false },
                 { id: 3, text: '一起在书店晒太阳', done: false }
             ],
 
-            // === 照片墙数据 (已修复逗号错误) ===
             photoWall: [
                 { id: 1, url: 'https://i.postimg.cc/zvLFnrh5/guzhang.png', x: 50, y: 50, width: 80 },
                 { id: 2, url: 'https://i.postimg.cc/Cxpsf9Lc/deyi.png', x: 50, y: 50, width: 80 },
                 { id: 3, url: 'https://i.postimg.cc/c1VbX9LZ/linggan.png', x: 50, y: 50, width: 80 },
                 { id: 4, url: 'https://i.postimg.cc/vZySd49x/jushou.png', x: 50, y: 50, width: 80 },
-                { id: 5, url: 'https://i.postimg.cc/TwBCN1fP/lini.png', x: 50, y: 50, width: 80 }, // <--- 这里加上了逗号
+                { id: 5, url: 'https://i.postimg.cc/TwBCN1fP/lini.png', x: 50, y: 50, width: 80 },
                 { id: 6, url: 'https://i.postimg.cc/zfcj3vLV/niaoni.png', x: 50, y: 50, width: 80 }
             ],
             
@@ -33,7 +32,8 @@ const DesktopModule = {
                 title: '我们需要更多Sariel!' 
             },
 
-            showEditor: false, showPhotoEditor: false, longPressTimer: null, 
+            // 删除 longPressTimer
+            showEditor: false, showPhotoEditor: false, 
             heroSettings: { bgImage: '', bgPosX: 50, bgPosY: 50, bgSize: 100, avatarPosX: 50, avatarPosY: 50, avatarSize: 100, textColor: '#ff9a8b' },
             
             countdown: {
@@ -41,24 +41,33 @@ const DesktopModule = {
                 targetDate: '2025-11-28', 
                 days: 0, 
                 isFuture: false, 
-                showEditor: false 
+                showEditor: false, 
+                bgImage: '', 
+                bgSize: 100, 
+                bgPosX: 50, 
+                bgPosY: 50,
+                textColor: '#ff9a8b'
             },
 
-            // Remix 图标配置
             sideApps: [
                 { id: 'messenger', name: 'Dialogue', icon: 'ri-message-3-line' }, 
-                { id: 'profile',   name: 'Identity', icon: 'ri-passport-line' },
+                { id: 'theater',    name: 'Theater', icon: 'ri-clapperboard-line' },
             ],
 
             extraApps: [
-                { id: 'placeholder-1', name: 'Reserved', icon: 'ri-checkbox-blank-circle-line' },
-                { id: 'placeholder-2', name: 'Reserved', icon: 'ri-checkbox-blank-circle-line' },
                 { id: 'world-book', name: 'Archive', icon: 'ri-book-read-line' }, 
                 { id: 'monitor',    name: 'Trace', icon: 'ri-map-pin-line' }
             ],
-
+            page2Apps: [
+                { id: 'diary',      name: 'Diary',    icon: 'ri-book-3-line' },
+                { id: 'check',      name: 'Check',    icon: 'ri-smartphone-line' },
+                { id: 'shop',       name: 'Mall',     icon: 'ri-shopping-bag-3-line' },
+                { id: 'notes',      name: 'Notes',   icon: 'ri-sticky-note-line' },
+                { id: 'music',      name: 'Music',    icon: 'ri-disc-line' },
+                { id: 'forum',      name: 'Forum',    icon: 'ri-discuss-line' }
+            ],
             dockApps: [
-                { id: 'theater',    name: 'Theater', icon: 'ri-clapperboard-line' },
+                { id: 'profile',   name: 'Identity', icon: 'ri-passport-line' },
                 { id: 'appearance', name: 'Vision', icon: 'ri-paint-brush-line' }, 
                 { id: 'api-set',    name: 'Link', icon: 'ri-links-line' },
                 { id: 'settings',   name: 'Control', icon: 'ri-equalizer-line' }
@@ -81,16 +90,32 @@ const DesktopModule = {
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    this.userAvatar = parsed.userAvatar || this.defaultAvatar;
-                    this.headerText = parsed.headerText; this.todos = parsed.todos;
-                    Object.assign(this.heroSettings, parsed.heroSettings);
+                    
+                    if (parsed.userAvatar !== undefined && parsed.userAvatar !== null) {
+                        this.userAvatar = parsed.userAvatar;
+                    } else {
+                        this.userAvatar = this.defaultAvatar;
+                    }
+
+                    this.headerText = parsed.headerText || ''; 
+                    this.todos = parsed.todos || [];
+                    
+                    if (parsed.heroSettings) Object.assign(this.heroSettings, parsed.heroSettings);
                     this.photoWall = parsed.photoWall || [];
-                    Object.assign(this.photoSettings, parsed.photoSettings);
-                    if(parsed.countdown) Object.assign(this.countdown, parsed.countdown);
-                } catch(e) { this.userAvatar = this.defaultAvatar; }
-            } else { this.userAvatar = this.defaultAvatar; }
+                    if (parsed.photoSettings) Object.assign(this.photoSettings, parsed.photoSettings);
+                    if (parsed.countdown) Object.assign(this.countdown, parsed.countdown);
+                    if (parsed.musicWidget) Object.assign(this.musicWidget, parsed.musicWidget);
+
+                } catch(e) { 
+                    console.error("数据解析失败，重置为默认", e);
+                    this.userAvatar = this.defaultAvatar; 
+                }
+            } else { 
+                this.userAvatar = this.defaultAvatar; 
+            }
             this.calculateCountdown();
         },
+
         fileToBase64(file) { return new Promise((r, j) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => r(reader.result); reader.onerror = e => j(e); }); },
 
         updateTime() {
@@ -110,16 +135,31 @@ const DesktopModule = {
         },
         toggleTodo(index) { this.todos[index].done = !this.todos[index].done; this.saveData(); },
         
+        handleScroll(e) {
+            const scrollLeft = e.target.scrollLeft;
+            const width = e.target.offsetWidth;
+            const page = Math.round(scrollLeft / width);
+            if (this.currentPage !== page) {
+                this.currentPage = page;
+            }
+        },
+
+        scrollToPage(index) {
+            const swiper = this.$refs.swiper; 
+            if (swiper) {
+                swiper.scrollTo({ left: swiper.offsetWidth * index, behavior: 'smooth' });
+            }
+        },        
+        
         triggerAvatarUpload() { document.getElementById('avatar-upload').click(); },
         async handleAvatarUpload(e) { if(e.target.files[0]) { this.userAvatar = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
         openApp(id) { console.log("Open:", id); },
 
-        handleContextMenu() { this.openEditor(); },
-        handleTouchStart() { this.longPressTimer = setTimeout(() => { this.openEditor(); }, 800); },
-        handleTouchEnd() { clearTimeout(this.longPressTimer); },
+        // 删除长按/右键相关方法 (handleContextMenu, handleTouchStart/End)
+        
         openEditor() { this.showEditor = true; },
         closeEditor() { this.showEditor = false; this.saveData(); },
-        triggerHeroBgUpload() { if(!this.showEditor) document.getElementById('hero-bg-upload').click(); },
+        triggerHeroBgUpload() { document.getElementById('hero-bg-upload').click(); }, // 简化
         async handleHeroBgUpload(e) { if(e.target.files[0]) { this.heroSettings.bgImage = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
         resetTextColor() { this.heroSettings.textColor = '#ff9a8b'; },
         deleteBg() { 
@@ -133,8 +173,8 @@ const DesktopModule = {
             this.saveData(); 
         },
 
-        handlePhotoContextMenu() { this.showPhotoEditor = true; },
-        handlePhotoTouchStart() { this.longPressTimer = setTimeout(() => { this.showPhotoEditor = true; }, 800); },
+        // 删除 handlePhotoContextMenu 等长按方法
+
         closePhotoEditor() { this.showPhotoEditor = false; this.photoSettings.currentEditId = null; this.saveData(); },
         triggerPhotoUpload() { document.getElementById('photo-wall-upload').click(); },
         async handlePhotoUpload(event) {
@@ -155,9 +195,12 @@ const DesktopModule = {
             const idx = this.photoWall.findIndex(p => p.id === this.photoSettings.currentEditId);
             if (idx !== -1) { this.photoWall.splice(idx, 1); this.backToPhotoList(); }
         },
-        triggerPhotoBgUpload() { document.getElementById('photo-bg-upload').click(); },
-        async handlePhotoBgUpload(e) { if(e.target.files[0]) { this.photoSettings.bgImage = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
-        deletePhotoBg() { this.photoSettings.bgImage = ''; },
+        // 删除 photoBg 相关方法 (handlePhotoBgUpload, deletePhotoBg)
+
+        openPhotoEditor() {
+            this.showPhotoEditor = true;
+            // 如果空可以自动弹，但目前只打开面板
+        },
 
         calculateCountdown() {
             const target = new Date(this.countdown.targetDate);
@@ -181,7 +224,22 @@ const DesktopModule = {
             this.countdown.showEditor = false; 
             this.calculateCountdown(); 
             this.saveData(); 
-        }
+        },
+        
+        triggerCountdownBgUpload() { document.getElementById('countdown-bg-upload').click(); },
+        async handleCountdownBgUpload(e) {
+            if(e.target.files[0]) {
+                this.countdown.bgImage = await this.fileToBase64(e.target.files[0]);
+                this.saveData();
+            }
+        },
+        deleteCountdownBg() {
+            this.countdown.bgImage = '';
+            this.countdown.bgSize = 100;
+            this.countdown.bgPosX = 50;
+            this.countdown.bgPosY = 50;
+            this.saveData();
+        },
     },
     mounted() {
         this.loadData(); 

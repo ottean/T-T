@@ -13,7 +13,7 @@ const app = createApp({
         openApp(appId) {
             console.log("打开应用:", appId);
             // 这里以后写逻辑：如果是有界面的App，就切换 currentApp
-            if (appId === 'messenger' || appId === 'theater') {
+            if (appId === '') {
                 this.currentApp = appId;
             } else {
                 alert("App " + appId + " 正在开发中...");
