@@ -164,13 +164,10 @@
                         <div class="fortune-front"><i class="ri-fire-line fortune-cover-icon"></i><span class="fortune-cover-text">今日运势</span></div>
                         <div class="fortune-back" v-if="fortune.current">
                             <div class="fortune-level">{{ fortune.current.level }}</div>
-                            <div class="fortune-content">
-                                <div class="fortune-item"><span class="fortune-label">宜</span><span class="fortune-text">{{ fortune.current.good }}</span></div>
-                                <div style="width: 40%; height: 1px; background: rgba(0,0,0,0.1);"></div>
-                                <div class="fortune-item"><span class="fortune-label">忌</span><span class="fortune-text">{{ fortune.current.bad }}</span></div>
+                            <div class="fortune-poem-box">
+                                    {{ fortune.current.text }}
                             </div>
                         </div>
-                        <div class="fortune-back" v-else></div>
                     </div>
                 </div>
 

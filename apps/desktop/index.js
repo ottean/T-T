@@ -1,13 +1,12 @@
 // apps/desktop/index.js
 
 export default {
-    name: 'DesktopComponent', // 给组件起个名，便于调试
-    emits: ['switch-app'],    // 声明组件会触发的事件
-    
+    name: 'DesktopComponent',
+    emits: ['switch-app'],
     data() {
         return {
             currentPage: 0, 
-            // === 核心数据 (从原 desktop.js 复制过来) ===
+            // === 核心数据 ===
             widgetBg: '', 
             defaultAvatar: 'https://i.postimg.cc/dtz2dpnV/bookmark.png',
             userAvatar: 'https://i.postimg.cc/dtz2dpnV/bookmark.png',
@@ -25,8 +24,6 @@ export default {
                 { id: 2, url: 'https://i.postimg.cc/Cxpsf9Lc/deyi.png', x: 50, y: 50, width: 80 },
                 { id: 3, url: 'https://i.postimg.cc/c1VbX9LZ/linggan.png', x: 50, y: 50, width: 80 },
                 { id: 4, url: 'https://i.postimg.cc/vZySd49x/jushou.png', x: 50, y: 50, width: 80 },
-                { id: 5, url: 'https://i.postimg.cc/TwBCN1fP/lini.png', x: 50, y: 50, width: 80 },
-                { id: 6, url: 'https://i.postimg.cc/zfcj3vLV/niaoni.png', x: 50, y: 50, width: 80 }
             ],
             
             photoSettings: { 
@@ -39,106 +36,188 @@ export default {
             heroSettings: { bgImage: '', bgPosX: 50, bgPosY: 50, bgSize: 100, avatarPosX: 50, avatarPosY: 50, avatarSize: 100, textColor: '#ff9a8b' },
             
             countdown: {
-                title: 'ˋˏᰔᩚˎˊ˗', targetDate: '2025-11-28', days: 0, isFuture: false, showEditor: false, 
-                bgImage: '', bgSize: 100, bgPosX: 50, bgPosY: 50, textColor: '#ff9a8b'
+                title: 'ˋˏᰔᩚˎˊ˗', 
+                targetDate: '2025-11-28', 
+                days: 0, 
+                isFuture: false, 
+                showEditor: false, 
+                bgImage: '', 
+                bgSize: 100, 
+                bgPosX: 50, 
+                bgPosY: 50,
+                textColor: '#ff9a8b'
             },
+
             isDraggingSlider: false,
 
             loveWidget: {
-                title: '✨·Zoの恋爱日记°♡', subtitle: '·˶╹-╹˶ ', avatarL: '', avatarR: '', label: '恋爱进度值', days: '318'
+                title: '✨·Zoの恋爱日记°♡',
+                subtitle: '·˶╹-╹˶ ',
+                avatarL: '',
+                avatarR: '',
+                label: '恋爱进度值',
+                days: '318'
             },
-            showDeleteL: false, showDeleteR: false,
+            showDeleteL: false,
+            showDeleteR: false,
 
             fortune: {
-                lastDate: '', current: null, isAnimating: false, isFlipped: false, lastDrawDate: '',
+                lastDate: '', 
+                current: null, 
+                isAnimating: false,
+                isFlipped: false, 
                 pool: [
-                    { level: '大吉', good: '写代码一次过', bad: '喝凉水塞牙' },
-                    { level: '中吉', good: '遇见修狗', bad: '忘带钥匙' },
-                    { level: '小吉', good: '奶茶半价', bad: '久坐不动' }
+                    { level: '猫奴', text: '溪柴火软蛮毡暖，\n我与书签不出门。' },
+                    { level: '安逸', text: '偷得浮生半日闲，\n拥猫高卧不论年。' },
+                    { level: '逍遥', text: '不羡鸳鸯不羡仙，\n只羡书签晒日边。' },
+                    { level: '安康', text: '三花聚鼎身无恙，\n日暖风和好安眠。' },
+                    { level: '贪吃', text: '书签闻香知美味，\n不辞长作守碗奴。' },
+                    { level: '辟邪', text: '书签坐镇无邪事，\n岁岁平安福满堂。' },
+                    { level: '懒惰', text: '日上三竿犹未起，\n书签教你慢生活。' },
+                    { level: '灵感', text: '笔下生花猫添趣，\n文思泉涌若江河。' },
+                    { level: '团圆', text: '月圆人圆猫亦圆，\n书签蜷作玉盘团。' },
+                    { level: '自在', text: '醉卧花阴终日懒，\n不知世上几多愁。' },
+                    { level: '嬉戏', text: '闲来戏扑风中絮，\n误把飞花作蝶看。' },
+                    { level: '安稳', text: '风雨不动安如山，\n怀中书签梦正酣。' },
+                    { level: '忠诚', text: '虽无言语能倾诉，\n长伴身旁不离分。' },
+                    { level: '暖阳', text: '负暄窗下毛如雪，\n只把光阴作睡乡。' },
+                    { level: '高冷', text: '任尔千呼都不理，\n尾梢轻摆自风流。' },
+                    { level: '无忧', text: '饱食终日无所事，\n闲看庭前花草生。' },
+                    { level: '福气', text: '家有书签多喜乐，\n从此愁绪不沾身。' },
+                    { level: '撒欢', text: '追云逐月不知累，\n只有书签最解忧。' },
+                    { level: '圆满', text: '事事顺心如猫意，\n一生无虑乐悠游。' },
+                    { level: '春晓', text: '爪试新泥知春暖，\n扑蝶花间意未休。' },
+                    { level: '夏凉', text: '竹席清凉堪入梦，\n一觉醒来日已西。' },
+                    { level: '秋意', text: '金风送爽书签醉，\n闲扑黄花满地香。' },
+                    { level: '冬藏', text: '围炉煮酒猫相伴，\n风雪何曾入梦寒。' },
+                    { level: '感恩', text: '衔来雀鸟报亲恩，\n虽是无知亦动人。' },                    
                 ]
             },
 
             profile: {
                 bgImage: '', avatar: '', sticker1: '🎧', sticker2: '🖤', musicCover: '',
                 id: '@书签大王是猫猫', sign: '✨·“你是最特别的存在”··〰··ʚɞ',
-                info: 'MBTI: ACAT\n生日:11.20', bio: '每日掉毛量:致力于让每一本书都穿上毛衣\n捕鼠能力:见到老鼠可能会先打个招呼', tag: '性格: 腼腆\nIP: 港岛'
+                info: 'MBTI: ACAT\n生日:11.20', bio: '掉毛量:致力于让每一本书都穿上毛衣\n捕鼠能力:见到老鼠可能会先打个招呼\n卖萌技巧:视乎对方手中冻干数量而定', tag: '性格: 腼腆\nIP: 港岛'
             },
             showDeleteProfileAvatar: false, showDeleteMusicCover: false,
 
             moodCheck: {
-                selected: null, lastTime: '', 
+                selected: null, 
+                lastTime: '', 
                 options: [
-                    { emoji: 'OvO', color: '#ffeaa7', text: '美滋滋' },
-                    { emoji: '-_-', color: '#dfe6e9', text: '无语' },
-                    { emoji: 'QAQ', color: '#74b9ff', text: '想哭' },
-                    { emoji: 'o_o', color: '#81ecec', text: '发呆' },
-                    { emoji: 'zzz', color: '#a29bfe', text: '困困' },
-                    { emoji: '>_<', color: '#ff7675', text: '抓狂' },
-                    { emoji: '^3^', color: '#fab1a0', text: '亲亲' },
-                    { emoji: 'T_T', color: '#55efc4', text: '泪奔' },
-                    { emoji: 'OwO', color: '#fd79a8', text: '哇哦' }
+                    { emoji: 'OvO',   color: '#ffeaa7', text: '美滋滋' },
+                    { emoji: '-_-',   color: '#dfe6e9', text: '无语' },
+                    { emoji: 'QAQ',   color: '#74b9ff', text: '想哭' },
+                    { emoji: 'o_o',   color: '#81ecec', text: '发呆' },
+                    { emoji: 'zzz',   color: '#a29bfe', text: '困困' },
+                    { emoji: '>_<',   color: '#ff7675', text: '抓狂' },
+                    { emoji: '^3^',   color: '#fab1a0', text: '亲亲' },
+                    { emoji: 'T_T',   color: '#55efc4', text: '泪奔' },
+                    { emoji: 'OwO',   color: '#fd79a8', text: '哇哦' }
                 ] 
             },
 
-            // 侧边栏应用
             sideApps: [
-                { id: 'messenger', name: 'Messeger', icon: 'ri-message-3-line' }, // 这里的ID对应 apps/messenger 文件夹
+                { id: 'messenger', name: 'Dialogue', icon: 'ri-message-3-line' }, 
                 { id: 'theater',    name: 'Theater', icon: 'ri-clapperboard-line' },
             ],
+
             extraApps: [
-                { id: 'datanase', name: 'Database', icon: 'ri-book-read-line' }, 
-                { id: 'trace',    name: 'Trace', icon: 'ri-map-pin-line' }
+                { id: 'world-book', name: 'Archive', icon: 'ri-book-read-line' }, 
+                { id: 'monitor',    name: 'Trace', icon: 'ri-map-pin-line' }
             ],
             page2Apps: [
                 { id: 'diary',      name: 'Diary',    icon: 'ri-book-3-line' },
                 { id: 'check',      name: 'Check',    icon: 'ri-smartphone-line' },
-                { id: 'shop',       name: 'Shop',     icon: 'ri-shopping-bag-3-line' },
+                { id: 'shop',       name: 'Mall',     icon: 'ri-shopping-bag-3-line' },
                 { id: 'music',      name: 'Music',    icon: 'ri-disc-line' },
                 { id: 'forum',      name: 'Forum',    icon: 'ri-discuss-line' }
             ],
             dockApps: [
-                { id: 'profile',   name: 'Profile', icon: 'ri-passport-line' },
-                { id: 'vision', name: 'Vision', icon: 'ri-paint-brush-line' }, 
-                { id: 'api-set',    name: 'Api', icon: 'ri-links-line' },
-                { id: 'settings',   name: 'Settings', icon: 'ri-equalizer-line' }
+                { id: 'profile',   name: 'Identity', icon: 'ri-passport-line' },
+                { id: 'appearance', name: 'Vision', icon: 'ri-paint-brush-line' }, 
+                { id: 'api-set',    name: 'Link', icon: 'ri-links-line' },
+                { id: 'settings',   name: 'Control', icon: 'ri-equalizer-line' }
             ],
         }
     },
     computed: { currentEditPhoto() { return this.photoWall.find(p => p.id === this.photoSettings.currentEditId); } },
     methods: {
-        // === 关键修改：打开 App 触发事件 ===
+        // ✅ 核心功能：打开其他 App
         openApp(id) { 
             console.log("Desktop requesting open:", id);
             this.$emit('switch-app', id); 
         },
 
-        // === 原有逻辑保持不变 (省略部分实现细节以节省篇幅，请直接把原 desktop.js 的 methods 拷进来) ===
+        // ✅ 辅助工具：获取东八区当前日期 (YYYY-MM-DD)
+        getBeijingDate() {
+            const now = new Date();
+            const options = { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const dateStr = new Intl.DateTimeFormat('zh-CN', options).format(now);
+            // 格式化通常返回 "2023/10/27"，替换斜杠以防万一
+            return dateStr.replace(/\//g, '-');
+        },
+
         saveData() {
             const dataToSave = {
                 userAvatar: this.userAvatar, headerText: this.headerText, todos: this.todos,
                 heroSettings: this.heroSettings, photoWall: this.photoWall,
                 photoSettings: { ...this.photoSettings, currentEditId: null },
                 countdown: { ...this.countdown, showEditor: false },
-                loveWidget: this.loveWidget, fortune: this.fortune, profile: this.profile, moodCheck: this.moodCheck
+                loveWidget: this.loveWidget,
+                fortune: this.fortune,
+                profile: this.profile,
+                moodCheck: this.moodCheck
             };
             try { localStorage.setItem('ai_phone_data', JSON.stringify(dataToSave)); } catch (e) {}
         },
         loadData() {
-            // ... (原逻辑)
             const saved = localStorage.getItem('ai_phone_data');
-            if(saved) {
+            if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    Object.assign(this, parsed); // 简写，实际请按需赋值避免覆盖默认结构
-                    // 修复 moodCheck 结构丢失问题
-                    if (parsed.moodCheck) Object.assign(this.moodCheck, parsed.moodCheck); 
-                } catch(e){}
+                    
+                    if (parsed.userAvatar) this.userAvatar = parsed.userAvatar; else this.userAvatar = this.defaultAvatar;
+                    this.headerText = parsed.headerText || ''; 
+                    this.todos = parsed.todos || [];
+                    
+                    if (parsed.heroSettings) Object.assign(this.heroSettings, parsed.heroSettings);
+                    this.photoWall = parsed.photoWall || [];
+                    if (parsed.photoSettings) Object.assign(this.photoSettings, parsed.photoSettings);
+                    if (parsed.countdown) Object.assign(this.countdown, parsed.countdown);
+                    if (parsed.loveWidget) Object.assign(this.loveWidget, parsed.loveWidget);
+
+                    // ✅ 修复：抽签逻辑 (使用北京时间)
+                    if (parsed.fortune) {
+                        Object.assign(this.fortune, parsed.fortune);
+                        
+                        const today = this.getBeijingDate(); // 获取当前北京日期
+                        
+                        if (this.fortune.lastDate === today) {
+                            // 是今天，保持翻转状态
+                            if (this.fortune.current) this.fortune.isFlipped = true; 
+                        } else {
+                            // 过期了，重置
+                            this.fortune.current = null;
+                            this.fortune.isFlipped = false;
+                        }
+                    }
+                
+                    if (parsed.profile) Object.assign(this.profile, parsed.profile);
+                    if (parsed.moodCheck) Object.assign(this.moodCheck, parsed.moodCheck);
+
+                } catch(e) { 
+                    console.error("数据解析失败", e);
+                    this.userAvatar = this.defaultAvatar; 
+                }
+            } else { 
+                this.userAvatar = this.defaultAvatar; 
             }
             this.calculateCountdown();
         },
-        // ... (其他所有 helper 函数：fileToBase64, updateTime, initBattery, handleScroll, handleAvatarUpload 等等)
-        // 请务必把 desktop.js 中所有的 methods 完整复制到这里
+
         fileToBase64(file) { return new Promise((r, j) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => r(reader.result); reader.onerror = e => j(e); }); },
+
         updateTime() {
             const now = new Date();
             this.timeString = `${now.getHours().toString().padStart(2, '0')} : ${now.getMinutes().toString().padStart(2, '0')}`;
@@ -151,8 +230,11 @@ export default {
         },
         updateBattery(battery) { 
             this.batteryLevel = Math.round(battery.level * 100);
-            this.ringOffset = this.ringCircumference - (this.ringCircumference * (this.batteryLevel / 100));
+            const percentage = this.batteryLevel / 100;
+            this.ringOffset = this.ringCircumference - (this.ringCircumference * percentage);
         },
+        toggleTodo(index) { this.todos[index].done = !this.todos[index].done; this.saveData(); },
+        
         handleScroll(e) {
             const scrollLeft = e.target.scrollLeft;
             const width = e.target.offsetWidth;
@@ -162,8 +244,8 @@ export default {
         scrollToPage(index) {
             const swiper = this.$refs.swiper; 
             if (swiper) swiper.scrollTo({ left: swiper.offsetWidth * index, behavior: 'smooth' });
-        },
-        toggleTodo(index) { this.todos[index].done = !this.todos[index].done; this.saveData(); },
+        },        
+        
         openEditor() { this.showEditor = true; },
         closeEditor() { this.showEditor = false; this.saveData(); },
         triggerHeroBgUpload() { document.getElementById('hero-bg-upload').click(); },
@@ -173,7 +255,7 @@ export default {
         triggerAvatarUpload() { document.getElementById('avatar-upload').click(); },
         async handleAvatarUpload(e) { if(e.target.files[0]) { this.userAvatar = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
         deleteAvatar() { this.userAvatar = ''; this.saveData(); },
-        openPhotoEditor() { this.showPhotoEditor = true; },
+
         closePhotoEditor() { this.showPhotoEditor = false; this.photoSettings.currentEditId = null; this.saveData(); },
         triggerPhotoUpload() { document.getElementById('photo-wall-upload').click(); },
         async handlePhotoUpload(event) {
@@ -192,8 +274,11 @@ export default {
             const idx = this.photoWall.findIndex(p => p.id === this.photoSettings.currentEditId);
             if (idx !== -1) { this.photoWall.splice(idx, 1); this.backToPhotoList(); }
         },
+        openPhotoEditor() { this.showPhotoEditor = true; },
+
         calculateCountdown() {
-            const target = new Date(this.countdown.targetDate); const today = new Date();
+            const target = new Date(this.countdown.targetDate);
+            const today = new Date();
             target.setHours(0,0,0,0); today.setHours(0,0,0,0);
             const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
             this.countdown.isFuture = diffDays > 0;
@@ -204,43 +289,70 @@ export default {
         triggerCountdownBgUpload() { document.getElementById('countdown-bg-upload').click(); },
         async handleCountdownBgUpload(e) { if(e.target.files[0]) { this.countdown.bgImage = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
         deleteCountdownBg() { this.countdown.bgImage = ''; this.saveData(); },
+
         onSliderStart() { this.isDraggingSlider = true; },
         onSliderEnd() { this.isDraggingSlider = false; this.saveData(); },
-        handleAvatarClick(side) {
-             if(side==='L') { if(!this.loveWidget.avatarL) document.getElementById('love-avatar-l').click(); else { this.showDeleteL = !this.showDeleteL; if(this.showDeleteL) setTimeout(()=>this.showDeleteL=false,3000); } }
-             else { if(!this.loveWidget.avatarR) document.getElementById('love-avatar-r').click(); else { this.showDeleteR = !this.showDeleteR; if(this.showDeleteR) setTimeout(()=>this.showDeleteR=false,3000); } }
-        },
+
+        triggerLoveAvatarL() { document.getElementById('love-avatar-l').click(); },
         async handleLoveAvatarL(e) { if(e.target.files[0]) { this.loveWidget.avatarL = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
-        async handleLoveAvatarR(e) { if(e.target.files[0]) { this.loveWidget.avatarR = await this.fileToBase64(e.target.files[0]); this.saveData(); } },
-        deleteLoveAvatar(side) { if(side==='L') this.loveWidget.avatarL=''; else this.loveWidget.avatarR=''; this.saveData(); },
-        drawFortune() {
-            if(this.fortune.isFlipped) return;
-            const r = Math.floor(Math.random()*this.fortune.pool.length);
-            this.fortune.current = this.fortune.pool[r];
-            this.fortune.lastDate = new Date().toISOString().split('T')[0];
-            this.fortune.isFlipped = true;
-            this.saveData();
-        },
-        handleProfileImgClick(type) {
-            if(!this.profile[type]) this.triggerUpload(type);
-            else { 
-                if(type==='avatar') { this.showDeleteProfileAvatar=!this.showDeleteProfileAvatar; if(this.showDeleteProfileAvatar) setTimeout(()=>this.showDeleteProfileAvatar=false,3000); }
-                else { this.showDeleteMusicCover=!this.showDeleteMusicCover; if(this.showDeleteMusicCover) setTimeout(()=>this.showDeleteMusicCover=false,3000); }
+        triggerLoveAvatarR() { document.getElementById('love-avatar-r').click(); },
+        async handleLoveAvatarR(e) { if(e.target.files[0]) { this.loveWidget.avatarR = await this.fileToBase64(e.target.files[0]); this.saveData(); } }, 
+        handleAvatarClick(side) {
+            if (side === 'L') {
+                if (!this.loveWidget.avatarL) document.getElementById('love-avatar-l').click();
+                else { this.showDeleteL = !this.showDeleteL; if(this.showDeleteL) setTimeout(() => this.showDeleteL = false, 3000); }
+            } else if (side === 'R') {
+                if (!this.loveWidget.avatarR) document.getElementById('love-avatar-r').click();
+                else { this.showDeleteR = !this.showDeleteR; if(this.showDeleteR) setTimeout(() => this.showDeleteR = false, 3000); }
             }
         },
-        triggerUpload(key) {
-            const input = document.createElement('input'); input.type='file'; input.accept='image/*';
-            input.onchange = async(e)=>{ if(e.target.files[0]) { this.profile[key] = await this.fileToBase64(e.target.files[0]); this.saveData(); } };
+        deleteLoveAvatar(side) {
+            if (side === 'L') { this.loveWidget.avatarL = ''; this.showDeleteL = false; }
+            if (side === 'R') { this.loveWidget.avatarR = ''; this.showDeleteR = false; }
+            this.saveData();
+        },
+
+        // === 修复：抽签逻辑 (使用北京时间) ===
+        drawFortune() {
+            if (this.fortune.isFlipped) return;
+
+            // 获取北京时间
+            const today = this.getBeijingDate();
+            
+            const random = Math.floor(Math.random() * this.fortune.pool.length);
+            this.fortune.current = this.fortune.pool[random];
+            this.fortune.lastDate = today; // 存入北京时间
+            this.fortune.isFlipped = true; 
+            
+            this.saveData(); 
+        },
+
+        triggerUpload(key) { 
+            const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+            input.onchange = async (e) => { if(e.target.files[0]) { this.profile[key] = await this.fileToBase64(e.target.files[0]); this.saveData(); } };
             input.click();
         },
-        deleteProfileImg(type) { this.profile[type]=''; this.saveData(); },
-        selectMoodCheck(idx) { this.moodCheck.selected = idx; this.moodCheck.lastTime = this.timeString; this.saveData(); },
-        resetMoodCheck() { this.moodCheck.selected = null; this.moodCheck.lastTime = ''; this.saveData(); }
+        handleProfileImgClick(type) {
+            if (!this.profile[type]) this.triggerUpload(type);
+            else {
+                if (type === 'avatar') { this.showDeleteProfileAvatar = !this.showDeleteProfileAvatar; if(this.showDeleteProfileAvatar) setTimeout(()=>this.showDeleteProfileAvatar=false, 3000); }
+                if (type === 'musicCover') { this.showDeleteMusicCover = !this.showDeleteMusicCover; if(this.showDeleteMusicCover) setTimeout(()=>this.showDeleteMusicCover=false, 3000); }
+            }
+        },
+        deleteProfileImg(type) {
+            this.profile[type] = ''; 
+            if (type === 'avatar') this.showDeleteProfileAvatar = false;
+            if (type === 'musicCover') this.showDeleteMusicCover = false;
+            this.saveData();
+        },
+        selectMoodCheck(index) { this.moodCheck.selected = index; this.saveData(); },
+        resetMoodCheck() { this.moodCheck.selected = null; this.moodCheck.lastTime = ''; this.saveData(); },
     },
     mounted() {
-        this.loadData();
-        this.updateTime();
-        setInterval(this.updateTime, 1000);
+        this.loadData(); 
+        this.updateTime(); 
+        setInterval(this.updateTime, 1000); 
         this.initBattery();
+        this.calculateCountdown();
     }
 };
