@@ -1,0 +1,21 @@
+{
+  "name": "SeanZo's Bookmark",
+  "short_name": "ZS.Mark",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fdfbf7",
+  "theme_color": "#fdfbf7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/8zjvfhDg/ZS-Mark.png",
+      "sizes": "800x800",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.postimg.cc/8zjvfhDg/ZS-Mark.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

@@ -2,11 +2,25 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Phone</title>
+    <!-- 关键：禁止缩放，让它像 App 一样固定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- 1. 网页标题 (浏览器标签页显示) -->
+    <title>ZS.Mark</title>
+
+    <!-- 2. PWA 核心配置 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#fdfbf7"> <!-- 顶栏颜色 -->
+
+    <!-- 3. iOS 专属配置 (Safari 添加到主屏幕) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ZS.Mark">
+    <!-- 这里暂时借用你的书签猫猫图作为图标 -->
+    <link rel="apple-touch-icon" href="hhttps://i.postimg.cc/8zjvfhDg/ZS-Mark.png">
+
     <link rel="stylesheet" href="css/global.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         /* 系统级背景球 */
@@ -15,6 +29,7 @@
         .orb-2 { width: 300px; height: 300px; background: #fcb69f; bottom: -80px; right: -80px; opacity: 0.6; }
     </style>
 </head>
+
 <body>
     <div id="app-screen">
         <div id="vue-app">
@@ -28,7 +43,18 @@
         </div>
     </div>
 
-    <!-- 引入主逻辑 (module 类型支持 import/export) -->
+    <!-- 1. 引入主逻辑 -->
     <script type="module" src="js/main.js"></script>
+
+    <!-- 2. 注册 PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('✅ ZS.Mark PWA 已就绪:', reg.scope))
+                    .catch(err => console.log('❌ PWA 注册失败:', err));
+            });
+        }
+    </script>
 </body>
 </html>

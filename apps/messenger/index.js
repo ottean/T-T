@@ -1,4 +1,4 @@
-// apps/messger/index.js
+// apps/messenger/index.js
 
 export default {
     name: 'MessengerApp',

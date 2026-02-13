@@ -1,0 +1,152 @@
+<div class="identity-app">
+    <!-- 顶部导航栏 -->
+    <div class="id-header">
+        <button v-if="!editingId" class="btn-icon" @click="goBack"><i class="ri-arrow-left-s-line"></i></button>
+        <button v-else class="btn-icon" @click="editingId = null"><i class="ri-arrow-left-s-line"></i></button>
+        
+        <!-- === 列表模式 (List View) === -->
+        <div v-if="!editingId" style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
+            <!-- Tab 切换 -->
+            <div class="tab-switch" style="margin-left: 10px;">
+                <span :class="{ active: currentTab === 'char' }" @click="switchTab('char')">Character</span>
+                <span class="divider">/</span>
+                <span :class="{ active: currentTab === 'user' }" @click="switchTab('user')">User</span>
+            </div>
+
+            <!-- ✅ 修复：列表页导入按钮 (仅 Char 显示) -->
+            <div class="header-actions" v-if="currentTab === 'char'">
+                <input type="file" ref="listImportInput" @change="handleListImport" style="display: none;" accept=".json">
+                <button class="btn-action-icon" title="Import JSON" @click="$refs.listImportInput.click()">
+                    <i class="ri-download-cloud-2-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- === 编辑模式 (Edit View) === -->
+        <div v-else style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
+            <div class="header-title" style="margin-left: 10px;">
+                {{ currentTab === 'user' ? 'Edit User' : 'Edit Character' }}
+            </div>
+            
+            <!-- 编辑页操作：仅 Char 显示 -->
+            <div class="header-actions" v-if="currentTab === 'char'">
+                <input type="file" ref="editImportInput" @change="handleEditImport" style="display: none;" accept=".json">
+                <button class="btn-action-icon" title="Overwrite with JSON" @click="$refs.editImportInput.click()">
+                    <i class="ri-download-cloud-2-line"></i>
+                </button>
+                <button class="btn-action-icon" title="Export JSON" @click="handleExport">
+                    <i class="ri-upload-cloud-2-line"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 占位符 (防止 Flex 布局塌陷) -->
+        <div v-if="!editingId && currentTab === 'user'" style="width: 32px;"></div>
+    </div>
+
+    <!-- 列表视图 -->
+    <div class="id-list-view" v-if="!editingId">
+        <div class="card-grid">
+            <div v-if="sortedList.length === 0" class="empty-tip">
+                还没有档案，创建一个吧！
+            </div>
+
+            <div class="id-card" v-for="item in sortedList" :key="item.id" @click="editItem(item)">
+                <div v-if="currentTab === 'char'" class="card-color-strip" :style="{ background: item.themeColor || '#ff9a8b' }"></div>
+                <div class="card-avatar">
+                    <img v-if="item.avatar" :src="item.avatar">
+                    <div v-else class="avatar-placeholder">{{ item.name ? item.name[0] : '?' }}</div>
+                </div>
+                <div class="card-info">
+                    <div class="card-name">{{ item.name || '未命名' }}</div>
+                </div>
+                <button class="card-fav-btn" 
+                        :class="{ active: item.isPinned }"
+                        :style="{ color: item.isPinned ? (item.themeColor || '#ff9a8b') : '#eee' }"
+                        @click.stop="togglePin(item)">
+                    <i class="ri-bear-smile-line"></i>
+                </button>
+            </div>
+
+            <div class="id-card add-card" @click="addNew">
+                <i class="ri-add-circle-line"></i>
+                <span>新建档案</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑视图 -->
+    <div class="id-edit-view" v-else>
+        <div class="edit-avatar-section" @click="triggerUpload">
+            <img v-if="editingData.avatar" :src="editingData.avatar">
+            <div v-else class="edit-avatar-placeholder"><i class="ri-camera-line"></i></div>
+            <input type="file" ref="fileInput" @change="handleUpload" style="display:none" accept="image/*">
+        </div>
+
+        <!-- === 角色 (AI) 编辑表单 === -->
+        <div class="edit-form" v-if="currentTab === 'char'">
+            <!-- 第一行：姓名 | 备注 | 颜色 -->
+            <div class="form-row">
+                <div class="form-group col-flex">
+                    <label>Name (姓名)<span class="required-star">*</span></label>
+                    <input v-model="editingData.name" type="text" placeholder="必填">
+                </div>
+                <div class="form-group col-flex">
+                    <label>Nickname (昵称)</label>
+                    <input v-model="editingData.nickname" type="text" placeholder="聊天显示名">
+                </div>
+                
+                <!-- 颜色列：上文本 下色块 -->
+                <div class="form-group col-fixed-hex">
+                    <input type="text" v-model="editingData.themeColor" class="hex-text-input" maxlength="7">
+                    
+                    <!-- ✅ 这里的点击事件已分离，不会触发文本框 -->
+                    <div class="color-block-btn" @click="$refs.colorInput.click()" :style="{ background: editingData.themeColor || '#ff9a8b' }">
+                        <input type="color" ref="colorInput" v-model="editingData.themeColor" class="color-input-hidden">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Bio (人设简介)</label>
+                <textarea v-model="editingData.bio" rows="3" placeholder="性格、喜好、背景故事..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>World Setting (世界观)</label>
+                <textarea v-model="editingData.world" rows="2" placeholder="角色所处的世界背景..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Dialogue Example (台词示例)</label>
+                <textarea v-model="editingData.dialogue" rows="3" placeholder="AI 学习用的对话样本..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Opening Line (开场白)</label>
+                <textarea v-model="editingData.greeting" rows="2" placeholder="线上聊天开场白（按回车换行可分气泡发送）"></textarea>
+            </div>
+        </div>
+
+        <!-- === 用户 (User) 编辑表单 === -->
+        <div class="edit-form" v-if="currentTab === 'user'">
+            <div class="form-group">
+                <label>Name (姓名)<span class="required-star">*</span></label>
+                <input v-model="editingData.name" type="text" placeholder="真实姓名">
+            </div>
+            <div class="form-group">
+                <label>Nickname (昵称)</label>
+                <input v-model="editingData.nickname" type="text" placeholder="你的昵称">
+            </div>
+            <div class="form-group">
+                <label>Bio (简介)</label>
+                <textarea v-model="editingData.bio" rows="4" placeholder="关于你自己..."></textarea>
+            </div>
+        </div>
+
+        <div class="edit-actions">
+            <button v-if="currentList.find(i => i.id === editingId)" class="btn-delete" @click="deleteItem">删除档案</button>
+            <button class="btn-save" @click="saveEdit">保存档案</button>
+        </div>
+    </div>
+</div>

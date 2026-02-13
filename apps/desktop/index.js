@@ -60,7 +60,7 @@ export default {
 
             profile: {
                 bgImage: '', avatar: '', sticker1: '🎧', sticker2: '🖤', musicCover: '',
-                id: '@书签大王是猫猫', sign: '✨·“你是最特别的存在”··〰·ʚɞ',
+                id: '@书签大王是猫猫', sign: '✨·“你是最特别的存在”··〰··ʚɞ',
                 info: 'MBTI: ACAT\n生日:11.20', bio: '每日掉毛量:致力于让每一本书都穿上毛衣\n捕鼠能力:见到老鼠可能会先打个招呼', tag: '性格: 腼腆\nIP: 港岛'
             },
             showDeleteProfileAvatar: false, showDeleteMusicCover: false,
@@ -82,25 +82,25 @@ export default {
 
             // 侧边栏应用
             sideApps: [
-                { id: 'messenger', name: 'Dialogue', icon: 'ri-message-3-line' }, // 这里的ID对应 apps/messenger 文件夹
+                { id: 'messenger', name: 'Messeger', icon: 'ri-message-3-line' }, // 这里的ID对应 apps/messenger 文件夹
                 { id: 'theater',    name: 'Theater', icon: 'ri-clapperboard-line' },
             ],
             extraApps: [
-                { id: 'world-book', name: 'Archive', icon: 'ri-book-read-line' }, 
-                { id: 'monitor',    name: 'Trace', icon: 'ri-map-pin-line' }
+                { id: 'datanase', name: 'Database', icon: 'ri-book-read-line' }, 
+                { id: 'trace',    name: 'Trace', icon: 'ri-map-pin-line' }
             ],
             page2Apps: [
                 { id: 'diary',      name: 'Diary',    icon: 'ri-book-3-line' },
                 { id: 'check',      name: 'Check',    icon: 'ri-smartphone-line' },
-                { id: 'shop',       name: 'Mall',     icon: 'ri-shopping-bag-3-line' },
+                { id: 'shop',       name: 'Shop',     icon: 'ri-shopping-bag-3-line' },
                 { id: 'music',      name: 'Music',    icon: 'ri-disc-line' },
                 { id: 'forum',      name: 'Forum',    icon: 'ri-discuss-line' }
             ],
             dockApps: [
-                { id: 'profile',   name: 'Identity', icon: 'ri-passport-line' },
-                { id: 'appearance', name: 'Vision', icon: 'ri-paint-brush-line' }, 
-                { id: 'api-set',    name: 'Link', icon: 'ri-links-line' },
-                { id: 'settings',   name: 'Control', icon: 'ri-equalizer-line' }
+                { id: 'profile',   name: 'Profile', icon: 'ri-passport-line' },
+                { id: 'vision', name: 'Vision', icon: 'ri-paint-brush-line' }, 
+                { id: 'api-set',    name: 'Api', icon: 'ri-links-line' },
+                { id: 'settings',   name: 'Settings', icon: 'ri-equalizer-line' }
             ],
         }
     },

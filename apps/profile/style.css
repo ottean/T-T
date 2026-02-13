@@ -1,0 +1,138 @@
+/* apps/profile/style.css */
+
+.identity-app {
+    width: 100%; height: 100%; background: #fdfbf7; 
+    position: relative; z-index: 100; display: flex; flex-direction: column;
+    animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* 顶部栏 */
+.id-header {
+    height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 15px; background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 101;
+}
+
+.btn-icon { background: transparent; border: none; font-size: 24px; color: #333; cursor: pointer; padding: 5px; display: flex; align-items: center; }
+
+.header-actions { display: flex; gap: 8px; }
+.btn-action-icon {
+    font-size: 20px; color: #666; background: transparent; border: none; cursor: pointer; padding: 5px;
+}
+.btn-action-icon:hover { color: #ff9a8b; }
+
+.tab-switch { font-size: 16px; font-weight: bold; color: #ccc; display: flex; gap: 15px; }
+.tab-switch span { cursor: pointer; transition: all 0.2s; position: relative; }
+.tab-switch span.active { color: #333; transform: scale(1.05); }
+.tab-switch span.active::after {
+    content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: #ff9a8b; border-radius: 2px;
+}
+.header-title { font-size: 16px; font-weight: bold; color: #333; }
+
+/* 列表区域 */
+.id-list-view { flex: 1; overflow-y: auto; padding: 20px; }
+.card-grid { display: flex; flex-direction: column; gap: 15px; padding-bottom: 40px; }
+
+.empty-tip { text-align: center; color: #999; margin-top: 50px; font-size: 14px; }
+
+.id-card {
+    background: white; border-radius: 16px; padding: 15px;
+    display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02);
+    cursor: pointer; transition: transform 0.1s; position: relative; overflow: hidden;
+}
+.id-card:active { transform: scale(0.98); }
+
+.card-color-strip {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #ff9a8b; 
+}
+
+.card-fav-btn {
+    padding: 10px; font-size: 20px; background: transparent; border: none; cursor: pointer;
+    color: #eee; transition: color 0.3s, transform 0.2s;
+}
+.card-fav-btn:hover { transform: scale(1.1); }
+
+.card-avatar {
+    width: 50px; height: 50px; border-radius: 12px; overflow: hidden; background: #f0f0f0; flex-shrink: 0; border: 1px solid #eee;
+    position: relative; z-index: 1; 
+}
+.card-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #ccc; font-size: 20px; }
+
+.card-info { flex: 1; overflow: hidden; }
+.card-name { font-weight: bold; color: #333; font-size: 16px; margin-bottom: 2px; }
+.card-sub { font-size: 12px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.add-card {
+    justify-content: center; color: #ff9a8b; font-weight: bold; 
+    background: rgba(255, 154, 139, 0.05); border: 1px dashed #ff9a8b; box-shadow: none;
+}
+
+/* 编辑视图 */
+.id-edit-view { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+
+.edit-avatar-section {
+    width: 90px; height: 90px; border-radius: 20px; background: #eee; margin: 10px auto 20px; 
+    overflow: hidden; position: relative; cursor: pointer;
+    border: 4px solid white; box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    z-index: 5;
+    flex-shrink: 0;
+}
+.edit-avatar-section img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.edit-avatar-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #ccc; }
+
+.edit-form { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+
+/* 布局调整 */
+.form-row { 
+    display: flex; gap: 10px; 
+    /* ✅ 强制底部对齐 */
+    align-items: flex-end; 
+} 
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.col-flex { flex: 1; min-width: 0; /* 防止子元素撑破flex */ } 
+.form-group.col-fixed-hex { width: 65px; flex-shrink: 0; } 
+
+.form-group label { 
+    font-size: 11px; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 2px;
+    line-height: 1.2; display: flex; align-items: center;
+    /* ✅ 关键修复：强制不换行，超出省略，防止Label高度不一致 */
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+}
+.required-star { color: #ff4d4f; margin-left: 2px; font-size: 14px; transform: translateY(2px); }
+
+/* HEX 输入框 */
+.hex-text-input {
+    border: none; background: transparent; padding: 0; margin-bottom: 2px;
+    font-size: 11px; color: #666; font-family: monospace; letter-spacing: 0.5px;
+    width: 100%; text-transform: uppercase; font-weight: bold; text-align: center;
+    outline: none;
+}
+.hex-text-input:focus { color: #ff9a8b; }
+
+/* 色块按钮 */
+.color-block-btn {
+    width: 100%; height: 44px; border-radius: 12px; border: 1px solid #eee; 
+    cursor: pointer; box-sizing: border-box; overflow: hidden;
+    position: relative;
+}
+.color-input-hidden { position: absolute; opacity: 0; width: 0; height: 0; }
+
+/* 常规输入框 */
+.form-group input[type="text"]:not(.hex-text-input), .form-group textarea {
+    padding: 12px; border: 1px solid #eee; border-radius: 12px; background: white; 
+    font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s;
+    width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px;
+}
+.form-group input:focus, .form-group textarea:focus { border-color: #ff9a8b; }
+
+.edit-actions { display: flex; gap: 15px; margin-top: 30px; padding-bottom: 30px; }
+.btn-save { flex: 2; padding: 14px; background: #333; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.btn-delete { flex: 1; padding: 14px; background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; }

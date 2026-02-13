@@ -1,4 +1,3 @@
-<!-- apps/desktop/template.html -->
 <div class="desktop-container">
     <!-- === 第一层：横向滚动视窗 (Swiper) === -->
     <div class="desktop-swiper" ref="swiper" @scroll="handleScroll">
@@ -58,9 +57,6 @@
 
             <!-- Main Layout -->
             <div class="main-layout-area">
-                
-                <!-- Row 1: 顶部两个宽图标 (Message / Theater) -->
-                <!-- 注意：点击这里会触发 openApp('messenger') -->
                 <div v-if="sideApps[0]" class="app-item col-span-2" style="grid-row: 1;" @click="openApp(sideApps[0].id)">
                     <div class="app-icon"><i :class="sideApps[0].icon"></i></div>
                 </div>
@@ -68,7 +64,6 @@
                     <div class="app-icon"><i :class="sideApps[1].icon"></i></div>
                 </div>
 
-                <!-- Row 2-3: 照片墙 -->
                 <div class="photo-grid-wrapper" style="grid-column: 1 / 5; grid-row: 2 / span 2;">
                     <div class="photo-widget" @click="openPhotoEditor">
                             <input type="file" id="photo-wall-upload" multiple accept="image/*" @change="handlePhotoUpload" style="display:none">
@@ -84,7 +79,6 @@
                     <input v-model="photoSettings.title" class="photo-title-outside" placeholder="TITLE" @click.stop @change="saveData">
                 </div>
 
-                <!-- Row 4-5: 底部混合布局 -->
                 <div v-if="extraApps[0]" class="app-item" style="grid-column: 1; grid-row: 4;" @click="openApp(extraApps[0].id)">
                     <div class="app-icon"><i :class="extraApps[0].icon"></i></div>
                     <span class="app-name">{{ extraApps[0].name }}</span>
@@ -94,7 +88,6 @@
                     <span class="app-name">{{ extraApps[1].name }}</span>
                 </div>
                 
-                <!-- 倒数日组件 -->
                 <div class="countdown-widget" 
                         style="grid-column: 2 / 5; grid-row: 4 / span 2;" 
                         :style="{ 
@@ -116,13 +109,11 @@
                 </div>
 
             </div>
-        </div> <!-- End Page 1 -->
+        </div>
 
-        <!-- === PAGE 2: 第二页 === -->
+        <!-- === PAGE 2 === -->
         <div class="desktop-page">
             <div class="main-layout-area" style="margin-top: 10px;">
-                
-                <!-- === 1. CP 恋爱组件 === -->
                 <div class="cp-widget-container" style="grid-column: 1 / 3; grid-row: 1 / 3;">
                     <div class="love-card">
                         <input type="file" id="love-avatar-l" accept="image/*" @change="handleLoveAvatarL" style="display:none">
@@ -149,20 +140,17 @@
                     </div>
                 </div>
 
-                <!-- === 2. 右侧 4 个 App === -->
                 <div class="app-item" style="grid-column: 3; grid-row: 1;" @click="openApp(page2Apps[0].id)"><div class="app-icon"><i :class="page2Apps[0].icon"></i></div><span class="app-name">{{ page2Apps[0].name }}</span></div>
                 <div class="app-item" style="grid-column: 4; grid-row: 1;" @click="openApp(page2Apps[1].id)"><div class="app-icon"><i :class="page2Apps[1].icon"></i></div><span class="app-name">{{ page2Apps[1].name }}</span></div>
                 <div class="app-item" style="grid-column: 3; grid-row: 2;" @click="openApp(page2Apps[2].id)"><div class="app-icon"><i :class="page2Apps[2].icon"></i></div><span class="app-name">{{ page2Apps[2].name }}</span></div>
                 <div class="app-item" style="grid-column: 4; grid-row: 2;" @click="openApp(page2Apps[3].id)"><div class="app-icon"><i :class="page2Apps[3].icon"></i></div><span class="app-name">{{ page2Apps[3].name }}</span></div>
                 <div class="app-item" style="grid-column: 1; grid-row: 3;" @click="openApp(page2Apps[4].id)"><div class="app-icon"><i :class="page2Apps[4].icon"></i></div><span class="app-name">{{ page2Apps[4].name }}</span></div>
 
-                <!-- === Row 4 左侧 App (占位) === -->
                 <div class="app-item" style="grid-column: 1; grid-row: 4;">
                     <div class="app-icon" style="background:rgba(255,255,255,0.2); border:1px dashed #ccc;"><i class="ri-add-line" style="color:#ccc;"></i></div>
                     <span class="app-name" style="color:#ccc;">Add</span>
                 </div>
 
-                <!-- === 心情打卡大方块 === -->
                 <div class="mood-grid-widget" :style="{ backgroundColor: moodCheck.selected !== null ? moodCheck.options[moodCheck.selected].color + '80' : 'rgba(255,255,255,0.45)', borderColor: moodCheck.selected !== null ? moodCheck.options[moodCheck.selected].color : 'rgba(255,255,255,0.6)' }">
                     <div class="mood-title-small" style="color: #555; cursor: pointer;" @click="resetMoodCheck">{{ moodCheck.selected !== null ? moodCheck.options[moodCheck.selected].text : 'MOOD LOG' }}</div>
                     <div class="mood-grid-inner">
@@ -171,7 +159,6 @@
                     <div v-if="moodCheck.lastTime" style="font-size:9px; text-align:right; color:#666; margin-top:5px; opacity:0.8;">Recorded at {{ moodCheck.lastTime }}</div>
                 </div>
 
-                <!-- === 抽签组件 === -->
                 <div class="fortune-widget" :class="{ flipped: fortune.isFlipped }" @click="drawFortune">
                     <div class="fortune-inner">
                         <div class="fortune-front"><i class="ri-fire-line fortune-cover-icon"></i><span class="fortune-cover-text">今日运势</span></div>
@@ -187,7 +174,6 @@
                     </div>
                 </div>
 
-                <!-- === 个人简介组件 === -->
                 <div class="profile-widget" :style="{ backgroundImage: profile.bgImage ? 'url(' + profile.bgImage + ')' : '' }">
                     <div class="pf-avatar" @click="handleProfileImgClick('avatar')">
                         <img v-if="profile.avatar" :src="profile.avatar" style="border-radius:50%;"><i v-else class="ri-add-line"></i>
@@ -215,16 +201,14 @@
             </div>
         </div>
 
-        <!-- Pagination Dots -->
         <div class="pagination-dots">
             <span class="dot" :class="{ active: currentPage === 0 }" @click="scrollToPage(0)"></span>
             <span class="dot" :class="{ active: currentPage === 1 }" @click="scrollToPage(1)"></span>
         </div>
 
-        <!-- Dock -->
         <div class="dock-container"><div class="app-item" v-for="app in dockApps" :key="app.id" @click="openApp(app.id)"><div class="app-icon dock-icon"><i :class="app.icon"></i></div></div></div>
 
-        <!-- === Modals === -->
+        <!-- === Hero Editor === -->
         <div v-if="showEditor" class="editor-modal-overlay" @click.self="closeEditor">
             <div class="editor-panel">
                 <div class="editor-title">卡片个性化</div>
@@ -248,11 +232,28 @@
                         <div class="control-group"><div class="control-label">Y轴 ({{ heroSettings.avatarPosY }}%)</div><input type="range" v-model="heroSettings.avatarPosY" min="0" max="100" class="slider-input" @change="saveData"></div>
                     </div>
                 </div>
-                <div class="control-group" style="margin-top:10px;"><div class="control-label">字体颜色</div><div class="color-picker-row"><input type="color" v-model="heroSettings.textColor" class="color-input"><span class="btn-reset" @click="resetTextColor">重置</span></div></div>
+                
+                <!-- ✅ Hero 颜色选择器 (分离点击事件) -->
+                <div class="control-row-color">
+                    <div class="color-label-group">
+                        <span class="color-label-main">字体颜色</span>
+                        <span class="btn-text-reset" @click="resetTextColor">恢复默认</span>
+                    </div>
+                    <!-- 去掉外层 @click -->
+                    <div class="color-capsule">
+                        <!-- 只在色块上绑定点击事件 -->
+                        <div class="capsule-preview" @click="$refs.heroColorInput.click()" :style="{ background: heroSettings.textColor }">
+                            <input type="color" ref="heroColorInput" v-model="heroSettings.textColor" class="desktop-color-hidden" @change="saveData">
+                        </div>
+                        <input type="text" v-model="heroSettings.textColor" class="capsule-hex" maxlength="7">
+                    </div>
+                </div>
+                
                 <button class="btn-close" @click="closeEditor">完成 (Done)</button>
             </div>
         </div>
 
+        <!-- === Countdown Editor === -->
         <div v-if="countdown.showEditor" class="editor-modal-overlay" @click.self="closeCountdownEditor">
             <div class="editor-panel countdown-panel" :class="{ 'is-dragging': isDraggingSlider }">
                 <div class="editor-title">纪念日设置</div>
@@ -273,10 +274,23 @@
                         <div class="control-group"><div class="control-label">Y轴 ({{ countdown.bgPosY }}%)</div><input type="range" v-model="countdown.bgPosY" min="0" max="100" class="slider-input" @change="saveData" @mousedown="onSliderStart" @mouseup="onSliderEnd" @touchstart="onSliderStart" @touchend="onSliderEnd"></div>
                     </div>
                 </div>
-                <div class="control-group" style="margin-top:10px;">
-                    <div class="control-label">文字颜色</div>
-                    <div class="color-picker-row"><input type="color" v-model="countdown.textColor" class="color-input" @change="saveData"><span class="btn-reset" @click="countdown.textColor = '#ff9a8b'; saveData()">重置</span></div>
+                
+                <!-- ✅ Countdown 颜色选择器 (分离点击事件) -->
+                <div class="control-row-color">
+                    <div class="color-label-group">
+                        <span class="color-label-main">文字颜色</span>
+                        <span class="btn-text-reset" @click="countdown.textColor = '#ff9a8b'; saveData()">恢复默认</span>
+                    </div>
+                    <!-- 去掉外层 @click -->
+                    <div class="color-capsule">
+                        <!-- 只在色块上绑定点击事件 -->
+                        <div class="capsule-preview" @click="$refs.countdownColorInput.click()" :style="{ background: countdown.textColor }">
+                            <input type="color" ref="countdownColorInput" v-model="countdown.textColor" class="desktop-color-hidden" @change="saveData">
+                        </div>
+                        <input type="text" v-model="countdown.textColor" class="capsule-hex" maxlength="7">
+                    </div>
                 </div>
+                
                 <button class="btn-close" @click="closeCountdownEditor" style="margin-top:15px;">完成 (Done)</button>
             </div>
         </div>

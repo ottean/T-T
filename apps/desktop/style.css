@@ -988,3 +988,65 @@
     z-index: 2; 
     border: none; 
 }
+
+/* apps/desktop/style.css - 追加到末尾 */
+
+/* ... (保留之前的所有样式，把刚才的 .desktop-color-row 那些删掉或者直接用下面的覆盖) ... */
+
+/* === 全新：精致版颜色选择行 === */
+.control-row-color {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.05); /* 加个顶部分割线更精致 */
+}
+
+/* 左侧：标题 + 重置按钮 */
+.color-label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.color-label-main {
+    font-size: 12px; font-weight: bold; color: #666;
+}
+.btn-text-reset {
+    font-size: 10px; color: var(--accent-orange, #ff9a8b); 
+    cursor: pointer; text-decoration: underline; opacity: 0.8;
+}
+.btn-text-reset:hover { opacity: 1; }
+
+/* 右侧：颜色胶囊 (色块+HEX) */
+.color-capsule {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.color-capsule:hover { border-color: #bbb; }
+
+.capsule-preview {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.1);
+    margin-right: 8px;
+    position: relative; /* 用于放 hidden input */
+}
+
+.capsule-hex {
+    border: none; background: transparent;
+    width: 60px;
+    font-family: monospace; font-size: 12px; color: #333;
+    text-transform: uppercase; outline: none;
+    letter-spacing: 0.5px;
+}
+
+.desktop-color-hidden {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+}
