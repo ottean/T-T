@@ -1,16 +1,211 @@
 <div class="messenger-container">
-    <div class="messenger-header">
-        <button class="btn-back" @click="goBack">
-            <i class="ri-arrow-left-s-line"></i>
-        </button>
-        <h2>{{ title }}</h2>
-    </div>
     
-    <div class="messenger-content">
-        <div class="empty-state">
-            <i class="ri-chat-smile-2-line"></i>
-            <p>这里将是消息列表</p>
-            <p style="font-size: 12px; opacity: 0.6;">(Messenger App Construction)</p>
+    <!-- List View -->
+    <div v-if="view === 'list'" class="view-list fade-in">
+        <div class="msg-header">
+            <button class="btn-icon-back" @click="goBack"><i class="ri-arrow-left-s-line"></i></button>
+            <span class="header-title">Chats</span>
+            <button class="btn-icon-add" @click="openImporter"><i class="ri-user-add-line"></i></button>
         </div>
+        <div class="contact-list">
+            <div class="search-bar"><i class="ri-search-line"></i><span>Search</span></div>
+            <div v-if="activeSessions.length === 0" class="empty-state-list" @click="openImporter">
+                <div class="empty-icon-circle"><i class="ri-user-add-line"></i></div>
+                <p>暂无对话</p><p style="font-size:12px; opacity:0.5;">点击右上角开启新对话</p>
+            </div>
+            <div class="contact-item" v-for="session in activeSessions" :key="session.chatId" 
+                 @click="startChat(session)"
+                 @contextmenu.prevent="handleContextMenu($event, 'session', session)"
+                 @touchstart="handleTouchStart('session', session)" @touchend="handleTouchEnd" @touchmove="handleTouchEnd">
+                <div class="contact-avatar"><img v-if="session.charData.avatar" :src="session.charData.avatar"><div v-else class="avatar-placeholder-sm">{{ session.charData.name[0] }}</div></div>
+                <div class="contact-info">
+                    <div class="contact-top-row"><span class="contact-name">{{ session.charData.nickname || session.charData.name }}</span><span class="contact-time">{{ getLastMsgTime(session.chatId) }}</span></div>
+                    <div class="contact-preview">{{ getLastMsgPreview(session.chatId) }}</div>
+                    <!-- ✅ 逻辑优化：没有名字（默认用户）时不显示 via -->
+                    <div v-if="session.userData.name && !['Me', 'Guest'].includes(session.userData.name)" style="font-size: 9px; color: #ccc; margin-top: 2px;">
+                        via {{ session.userData.nickname || session.userData.name }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat View -->
+    <div v-else class="view-chat slide-in-right">
+        <div class="chat-header">
+            <button class="btn-icon-back" @click="goBack"><i class="ri-arrow-left-s-line"></i></button>
+            <div class="header-profile-info">
+                <div class="header-avatar-xs"><img v-if="targetChar.avatar" :src="targetChar.avatar"><div v-else>{{ targetChar.name[0] }}</div></div>
+                <div class="header-text-col"><span class="chat-name">{{ targetChar.nickname || targetChar.name }}</span><span class="chat-status">{{ isTyping ? 'Typing...' : 'Online' }}</span></div>
+            </div>
+            <button class="btn-icon-more"><i class="ri-more-fill"></i></button>
+        </div>
+
+        <div class="chat-body" ref="chatBody" :class="{ 'multi-select-active': isMultiSelectMode }">
+            <div class="chat-pad-top"></div>
+            
+            <div v-for="msg in currentMessages" :key="msg.id">
+                
+                <div v-if="msg.type === 'system'" class="msg-system"
+                     :class="{ selected: isMultiSelectMode && selectedMsgIds.includes(msg.id) }"
+                     @click.stop="!isMultiSelectMode ? handleSystemClick(msg) : toggleSelection(msg)"
+                     @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)"
+                     @touchstart="!isMultiSelectMode && handleTouchStart('message', msg)" 
+                     @touchend="!isMultiSelectMode && handleTouchEnd()" 
+                     @touchmove="!isMultiSelectMode && handleTouchEnd()">
+                    <span>{{ msg.text }}</span>
+                </div>
+
+                <div v-else class="msg-row" :class="msg.sender">
+                    <div class="msg-avatar" @click.stop="isMultiSelectMode ? toggleSelection(msg) : null">
+                        <img v-if="msg.sender === 'them' ? targetChar.avatar : currentUser.avatar" 
+                             :src="msg.sender === 'them' ? targetChar.avatar : currentUser.avatar">
+                        <!-- ✅ 修正：如果没有名字，显示 'M' -->
+                        <div v-else>{{ msg.sender === 'them' ? targetChar.name[0] : (currentUser.name ? currentUser.name[0] : 'U') }}</div>
+                        
+                        <div v-if="isMultiSelectMode" class="avatar-select-overlay" :class="{ checked: selectedMsgIds.includes(msg.id) }">
+                            <i class="ri-check-line"></i>
+                        </div>
+                    </div>
+
+                    <div class="msg-content-stack">
+                        <div class="bubble-container">
+                            <div class="msg-bubble" 
+                                :style="{ background: msg.sender === 'me' ? (targetChar.themeColor || '#ff9a8b') : '#fff', color: msg.sender === 'me' ? '#fff' : '#333' }"
+                                @click.stop="isMultiSelectMode ? toggleSelection(msg) : null"
+                                @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)"
+                                @touchstart="!isMultiSelectMode && handleTouchStart('message', msg)" 
+                                @touchend="!isMultiSelectMode && handleTouchEnd()" 
+                                @touchmove="!isMultiSelectMode && handleTouchEnd()">
+                                {{ msg.text }}
+                            </div>
+                            <div class="msg-time">{{ msg.time }}</div>
+                        </div>
+                        <div v-if="msg.quote" class="quote-detached" :class="msg.sender">
+                            <span class="quote-name">{{ msg.quote.name }}:</span>
+                            <span class="quote-text">{{ msg.quote.text }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-if="isTyping" class="msg-row them">
+                <div class="msg-avatar"><img v-if="targetChar.avatar" :src="targetChar.avatar"><div v-else>{{ targetChar.name[0] }}</div></div>
+                <div class="msg-bubble typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+            </div>
+            
+            <div class="chat-pad-bottom"></div>
+        </div>
+
+        <!-- 正常输入区 -->
+        <div v-if="!isMultiSelectMode" class="chat-footer-transparent">
+            <div v-if="quotingMsg" class="quote-preview-bar">
+                <div class="quote-preview-content">
+                    <div class="quote-line-v"></div>
+                    <div class="quote-info">
+                        <span class="quote-name">回复 {{ quotingMsg.sender === 'me' ? (currentUser.nickname || currentUser.name || '我') : (targetChar.nickname || targetChar.name) }}</span>
+                        <span class="quote-text">{{ quotingMsg.text }}</span>
+                    </div>
+                </div>
+                <button class="btn-close-quote" @click="cancelQuote"><i class="ri-close-line"></i></button>
+            </div>
+            <button class="btn-tool-glass" @click="toggleToolbar" :class="{ active: showToolbar }"><i class="ri-add-line" :style="{ transform: showToolbar ? 'rotate(45deg)' : 'rotate(0deg)' }"></i></button>
+            <div class="input-capsule-glass">
+                <textarea v-model="inputText" rows="1" placeholder="Type a message..." @input="adjustTextarea" @keydown.enter.prevent="handleEnterKey"></textarea>
+                <button class="btn-action-glass" @click="handleSendOrReceive" :class="{ disabled: isTyping && !inputText.trim() }" :style="{ color: inputText.trim() ? (targetChar.themeColor || '#ff9a8b') : (isTyping ? '#ccc' : '#333') }">
+                    <i v-if="inputText.trim()" class="ri-send-plane-fill"></i><i v-else class="ri-outlet-line" style="font-size: 22px;"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 多选操作区 -->
+        <div v-if="isMultiSelectMode" class="multi-select-footer">
+            <button class="btn-multi-cancel" @click="exitMultiSelect">Cancel</button>
+            <span class="multi-count">Selected: {{ selectedMsgIds.length }}</span>
+            <button class="btn-multi-delete" @click="deleteSelectedMessages" :disabled="selectedMsgIds.length === 0">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+        
+        <div class="toolbar-panel" :class="{ open: showToolbar }">
+            <div class="tool-grid">
+                <div class="tool-item"><div class="tool-icon"><i class="ri-image-line"></i></div><span>Image</span></div>
+                <div class="tool-item"><div class="tool-icon"><i class="ri-emotion-line"></i></div><span>Emoji</span></div>
+                <div class="tool-item"><div class="tool-icon"><i class="ri-history-line"></i></div><span>History</span></div>
+                <div class="tool-item"><div class="tool-icon"><i class="ri-edit-line"></i></div><span>Edit</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importer -->
+    <div v-if="showImporter" class="importer-overlay" @click.self="showImporter = false">
+        <div class="importer-panel">
+            <div class="importer-header"><span>{{ importerStep === 1 ? '选择聊天对象 (Char)' : '选择你的身份 (User)' }}</span><button class="btn-close-sm" @click="showImporter = false"><i class="ri-close-line"></i></button></div>
+            
+            <div class="importer-list" v-if="importerStep === 1">
+                <div v-if="availableToImport.length === 0" style="text-align:center; padding:20px; color:#999; font-size:13px; display:flex; flex-direction:column; gap:10px;">
+                    <span>暂无角色</span>
+                    <button class="btn-confirm-glass" @click="goToIdentity" style="width:auto; margin:0 auto; padding:8px 20px;">去 Identity App 创建</button>
+                </div>
+                <div class="import-item" v-for="char in availableToImport" :key="char.id" @click="selectCharAndNext(char)">
+                    <div class="import-avatar"><img v-if="char.avatar" :src="char.avatar"><div v-else>{{ char.name[0] }}</div></div>
+                    <div class="import-name">{{ char.name }}</div>
+                    <i class="ri-arrow-right-s-line btn-add-icon" style="color: #ccc;"></i>
+                </div>
+            </div>
+            
+            <div class="importer-list" v-if="importerStep === 2">
+                 <div class="import-item" v-for="user in availableUsers" :key="user.id" @click="createChatSession(user)"><div class="import-avatar"><img v-if="user.avatar" :src="user.avatar"><div v-else>{{ user.name[0] }}</div></div><div class="import-name">{{ user.nickname || user.name }}</div><i class="ri-check-line btn-add-icon" style="color: #4cd137;"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu, Dialog, Toast (保持不变) -->
+    <div v-if="menuVisible" class="menu-overlay" @click.self="closeMenu">
+        <div v-if="menuType === 'session'" class="menu-panel session-menu">
+            <div class="menu-header">会话选项</div>
+            <div class="menu-item delete" @click="handleMenuAction('delete')"><i class="ri-delete-bin-line"></i> 删除会话</div>
+            <div class="menu-item cancel" @click="handleMenuAction('cancel')">取消</div>
+        </div>
+        <div v-if="menuType === 'system-msg'" class="menu-panel system-menu">
+            <div class="menu-header">系统消息</div>
+            <div class="menu-item delete" @click="handleMenuAction('delete')"><i class="ri-delete-bin-line"></i> 删除记录</div>
+            <div class="menu-item cancel" @click="handleMenuAction('cancel')">取消</div>
+        </div>
+        <div v-if="menuType === 'message'" class="menu-panel message-menu">
+            <div class="menu-grid">
+                <div class="menu-grid-item" @click="handleMenuAction('copy')"><i class="ri-file-copy-line"></i><span>复制</span></div>
+                <div class="menu-grid-item" @click="handleMenuAction('edit')"><i class="ri-edit-line"></i><span>编辑</span></div>
+                <div class="menu-grid-item" @click="handleMenuAction('quote')"><i class="ri-chat-quote-line"></i><span>引用</span></div>
+                <div class="menu-grid-item" @click="handleMenuAction('recall')"><i class="ri-arrow-go-back-line"></i><span>撤回</span></div>
+                <div class="menu-grid-item" @click="handleMenuAction('insert-up')"><i class="ri-insert-row-top"></i><span>上插</span></div>
+                <div class="menu-grid-item" @click="handleMenuAction('insert-down')"><i class="ri-insert-row-bottom"></i><span>下插</span></div>
+                 <div class="menu-grid-item delete" @click="handleMenuAction('delete')"><i class="ri-delete-bin-line"></i><span>删除</span></div>
+                <div class="menu-grid-item" @click="handleMenuAction('multi')"><i class="ri-checkbox-multiple-line"></i><span>多选</span></div>
+            </div>
+            <div class="menu-item cancel" @click="handleMenuAction('cancel')" style="margin-top:10px;">取消</div>
+        </div>
+    </div>
+    <div v-if="showDialog" class="dialog-overlay" @click.self="showDialog = false">
+        <div class="dialog-panel-bottom">
+            <div class="dialog-header-row">
+                <span class="dialog-title">{{ dialogMode === 'edit' ? 'Edit' : (dialogMode === 'insert-up' ? 'Insert Above' : 'Insert Below') }}</span>
+                <div v-if="dialogMode !== 'edit'" class="sender-toggle" @click="toggleDialogSender">
+                    <img v-if="dialogSender === 'me' && currentUser.avatar" :src="currentUser.avatar">
+                    <img v-else-if="dialogSender === 'them' && targetChar.avatar" :src="targetChar.avatar">
+                    <div v-else class="avatar-placeholder-xs">{{ dialogSender === 'me' ? 'Me' : 'Ta' }}</div>
+                    <i class="ri-arrow-left-right-line" style="font-size:10px; margin-left:4px; color:#999;"></i>
+                </div>
+            </div>
+            <textarea v-model="dialogText" class="dialog-input-glass" rows="4" placeholder="Type here..."></textarea>
+            <div class="dialog-actions">
+                <button class="btn-cancel-glass" @click="showDialog = false">Cancel</button>
+                <button class="btn-confirm-glass" @click="handleDialogConfirm" :style="{ background: targetChar.themeColor || '#ff9a8b' }">Confirm</button>
+            </div>
+        </div>
+    </div>
+    <div v-if="showToast" class="toast-popup">
+        <i class="ri-information-line"></i>
+        <span>{{ toastMessage }}</span>
     </div>
 </div>

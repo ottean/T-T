@@ -1,27 +1,35 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 关键：禁止缩放，让它像 App 一样固定 -->
+    <!-- 禁止缩放 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- 1. 网页标题 (浏览器标签页显示) -->
     <title>ZS.Mark</title>
 
-    <!-- 2. PWA 核心配置 -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#fdfbf7"> <!-- 顶栏颜色 -->
+    <!-- === PWA 核心配置 === -->
+    <!-- 1. Manifest (安卓主要看这个) -->
+    <!-- 给 manifest 加个版本号 ?v=3 强制刷新 -->
+    <link rel="manifest" href="manifest.json?v=3">
+    
+    <!-- 2. 状态栏颜色 -->
+    <meta name="theme-color" content="#fdfbf7">
 
-    <!-- 3. iOS 专属配置 (Safari 添加到主屏幕) -->
+    <!-- === 关键修复：iOS & 移动端图标强制声明 === -->
+    <!-- 3. Apple Touch Icon (iOS 和部分国产安卓桌面看这个) -->
+    <!-- 🚨 注意：给图片链接也加了 ?v=3，强制清缓存 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/8zjvfhDg/ZS-Mark.png?v=3">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/8zjvfhDg/ZS-Mark.png?v=3">
+
+    <!-- 4. iOS 专属沉浸式设置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ZS.Mark">
-    <!-- 这里暂时借用你的书签猫猫图作为图标 -->
-    <link rel="apple-touch-icon" href="hhttps://i.postimg.cc/8zjvfhDg/ZS-Mark.png">
 
+    <!-- 样式表 -->
     <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="apps/desktop/style.css"> <!-- 预加载桌面样式防止闪烁 -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
     <style>
         /* 系统级背景球 */
         .bg-orb { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 0; pointer-events: none; }

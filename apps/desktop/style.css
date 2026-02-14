@@ -60,6 +60,7 @@
     transition: all 0.3s;
     cursor: pointer;
     pointer-events: auto;
+    animation: none !important; 
 }
 .dot.active {
     background: var(--accent-orange, #ff9a8b) !important; 
@@ -738,8 +739,7 @@
     position: absolute;
     top: -5px; 
     right: 8px; 
-    width: auto;
-    width: 40px !important;
+    width: 58px ;
     height: 40px;
     transition: width 0.2s;
     background: transparent !important;
@@ -896,9 +896,8 @@
 .pf-sticker-bottom {
     position: absolute;
     bottom: 8px; 
-    left: 8px; 
-    width: auto;
-    width: 40px !important; 
+    left: 15px; 
+    width: 60px;
     height: 40px;
     transition: width 0.2s;
     background: transparent !important;
