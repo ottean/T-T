@@ -345,8 +345,22 @@ export default {
             if (type === 'musicCover') this.showDeleteMusicCover = false;
             this.saveData();
         },
-        selectMoodCheck(index) { this.moodCheck.selected = index; this.saveData(); },
-        resetMoodCheck() { this.moodCheck.selected = null; this.moodCheck.lastTime = ''; this.saveData(); },
+        selectMoodCheck(index) { this.moodCheck.selected = index; this.saveData(); },        selectMoodCheck(index) {
+            console.log("Selected Mood Index:", index); // 1. 看看函数跑没跑
+            
+            this.moodCheck.selected = index;
+            
+            // 2. 强制重新获取当前时间，不依赖 cached timeString
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')} : ${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            this.moodCheck.lastTime = timeStr;
+            
+            console.log("Recorded Time:", this.moodCheck.lastTime); // 3. 看看时间存进去没
+            
+            this.saveData();
+        },
+       resetMoodCheck() { this.moodCheck.selected = null; this.moodCheck.lastTime = ''; this.saveData(); },
     },
     mounted() {
         this.loadData(); 

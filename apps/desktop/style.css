@@ -636,7 +636,7 @@
     text-orientation: upright;
     white-space: pre-wrap;
     font-family: "Kaiti", "STKaiti", "SimSun", serif;
-    font-size: 12.9px !important; 
+    font-size: 12.5px !important; 
     font-weight: bold;
     color: #444;
     line-height: 1.5; 
@@ -934,6 +934,7 @@
     padding: 10px;
     box-sizing: border-box;
     box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+    overflow: visible; 
 }
 
 .mood-title-small {
