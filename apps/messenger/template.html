@@ -21,7 +21,6 @@
                 <div class="contact-info">
                     <div class="contact-top-row"><span class="contact-name">{{ session.charData.nickname || session.charData.name }}</span><span class="contact-time">{{ getLastMsgTime(session.chatId) }}</span></div>
                     <div class="contact-preview">{{ getLastMsgPreview(session.chatId) }}</div>
-                    <!-- ✅ 逻辑优化：没有名字（默认用户）时不显示 via -->
                     <div v-if="session.userData.name && !['Me', 'Guest'].includes(session.userData.name)" style="font-size: 9px; color: #ccc; margin-top: 2px;">
                         via {{ session.userData.nickname || session.userData.name }}
                     </div>
@@ -60,7 +59,6 @@
                     <div class="msg-avatar" @click.stop="isMultiSelectMode ? toggleSelection(msg) : null">
                         <img v-if="msg.sender === 'them' ? targetChar.avatar : currentUser.avatar" 
                              :src="msg.sender === 'them' ? targetChar.avatar : currentUser.avatar">
-                        <!-- ✅ 修正：如果没有名字，显示 'M' -->
                         <div v-else>{{ msg.sender === 'them' ? targetChar.name[0] : (currentUser.name ? currentUser.name[0] : 'U') }}</div>
                         
                         <div v-if="isMultiSelectMode" class="avatar-select-overlay" :class="{ checked: selectedMsgIds.includes(msg.id) }">
@@ -70,7 +68,9 @@
 
                     <div class="msg-content-stack">
                         <div class="bubble-container">
-                            <div class="msg-bubble" 
+                            
+                            <!-- 1. Text Bubble -->
+                            <div v-if="msg.type === 'text'" class="msg-bubble" 
                                 :style="{ background: msg.sender === 'me' ? (targetChar.themeColor || '#ff9a8b') : '#fff', color: msg.sender === 'me' ? '#fff' : '#333' }"
                                 @click.stop="isMultiSelectMode ? toggleSelection(msg) : null"
                                 @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)"
@@ -79,6 +79,73 @@
                                 @touchmove="!isMultiSelectMode && handleTouchEnd()">
                                 {{ msg.text }}
                             </div>
+
+                            <!-- 2. Voice Bubble -->
+                            <div v-else-if="msg.type === 'voice'" class="voice-wrapper">
+                                <div class="msg-voice"
+                                    :style="{ background: msg.sender === 'me' ? (targetChar.themeColor || '#ff9a8b') : '#fff', color: msg.sender === 'me' ? '#fff' : '#333', width: (40 + Math.min(msg.duration * 3, 160)) + 'px'  }"
+                                    @click.stop="isMultiSelectMode ? toggleSelection(msg) : toggleVoiceText(msg)"
+                                    @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)">
+                                    <div class="voice-icon">
+                                        <i v-if="!msg.isPlaying" class="ri-voiceprint-line"></i>
+                                        <div v-else class="voice-wave"><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div></div>
+                                    </div>
+                                    <span class="voice-duration">{{ msg.duration }}''</span>
+                                </div>
+                                <div v-if="msg.showTranscribed" class="voice-transcription" @click.stop="toggleVoiceText(msg)">
+                                    {{ msg.text }}
+                                </div>
+                            </div>
+
+                            <!-- 3. Camera Bubble (Fake Photo) -->
+                            <div v-else-if="msg.type === 'camera'" class="msg-camera"
+                                :style="{ backgroundImage: 'url(' + defaultCameraImg + ')' }"
+                                @click.stop="isMultiSelectMode ? toggleSelection(msg) : openPreview(msg)"
+                                @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)">
+                                <!-- badge removed -->
+                            </div>
+                            
+                            <!-- 4. Real Image Bubble -->
+                            <div v-else-if="msg.type === 'image'" class="msg-image"
+                                @click.stop="isMultiSelectMode ? toggleSelection(msg) : openPreview(msg)"
+                                @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)">
+                                <img :src="msg.text">
+                            </div>
+
+                            <!-- 5. Transfer Bubble -->
+                            <div v-else-if="msg.type === 'transfer'" class="msg-transfer"
+                                :class="{ disabled: msg.status && msg.status !== 'pending' }"
+                                @click.stop="isMultiSelectMode ? toggleSelection(msg) : handleTransferClick(msg)"
+                                @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)">
+                                <div class="transfer-header">
+                                    <div class="transfer-icon-circle"><i class="ri-exchange-dollar-line"></i></div>
+                                    <div class="transfer-info">
+                                        <span class="transfer-title">¥ {{ msg.amount }}</span>
+                                        <span class="transfer-desc">{{ msg.text || ('转账给 ' + (msg.sender === 'me' ? (targetChar.nickname || targetChar.name) : (currentUser.nickname || currentUser.name))) }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="transfer-footer">
+                                    <span>{{ msg.status === 'received' ? '已收款' : (msg.status === 'rejected' ? '已退还' : '转账') }}</span>
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </div>
+                            </div>
+
+                            <!-- 6. Video Call Bubble -->
+                            <div v-else-if="msg.type === 'video_call'" class="msg-video-call"
+                                :class="msg.status"
+                                @contextmenu.prevent="!isMultiSelectMode && handleContextMenu($event, 'message', msg)">
+                                <div class="video-call-icon-box">
+                                    <i v-if="msg.status === 'canceled' || msg.status === 'rejected'" class="ri-phone-fill" style="transform: rotate(135deg)"></i>
+                                    <i v-else class="ri-video-chat-fill"></i>
+                                </div>
+                                <div class="video-call-text">
+                                    <span class="vc-title">
+                                        {{ msg.status === 'canceled' ? '已取消' : (msg.status === 'rejected' ? '已拒绝' : '通话时长 ' + msg.text) }}
+                                    </span>
+                                </div>
+                            </div>
+
                             <div class="msg-time">{{ msg.time }}</div>
                         </div>
                         <div v-if="msg.quote" class="quote-detached" :class="msg.sender">
@@ -88,12 +155,7 @@
                     </div>
                 </div>
             </div>
-            
-            <div v-if="isTyping" class="msg-row them">
-                <div class="msg-avatar"><img v-if="targetChar.avatar" :src="targetChar.avatar"><div v-else>{{ targetChar.name[0] }}</div></div>
-                <div class="msg-bubble typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
-            </div>
-            
+
             <div class="chat-pad-bottom"></div>
         </div>
 
@@ -109,7 +171,10 @@
                 </div>
                 <button class="btn-close-quote" @click="cancelQuote"><i class="ri-close-line"></i></button>
             </div>
-            <button class="btn-tool-glass" @click="toggleToolbar" :class="{ active: showToolbar }"><i class="ri-add-line" :style="{ transform: showToolbar ? 'rotate(45deg)' : 'rotate(0deg)' }"></i></button>
+            
+            <!-- Toolbar Toggle Button -->
+            <button class="btn-tool-glass" @click="toggleToolbar" :class="{ active: showToolbar }"><i class="ri-add-line"></i></button>
+            
             <div class="input-capsule-glass">
                 <textarea v-model="inputText" rows="1" placeholder="Type a message..." @input="adjustTextarea" @keydown.enter.prevent="handleEnterKey"></textarea>
                 <button class="btn-action-glass" @click="handleSendOrReceive" :class="{ disabled: isTyping && !inputText.trim() }" :style="{ color: inputText.trim() ? (targetChar.themeColor || '#ff9a8b') : (isTyping ? '#ccc' : '#333') }">
@@ -127,21 +192,102 @@
             </button>
         </div>
         
+        <!-- Toolbar Overlay (Click outside to close) -->
+        <div class="toolbar-overlay" :class="{ show: showToolbar }" @click="showToolbar = false"></div>
+
+        <!-- Toolbar Panel -->
         <div class="toolbar-panel" :class="{ open: showToolbar }">
             <div class="tool-grid">
-                <div class="tool-item"><div class="tool-icon"><i class="ri-image-line"></i></div><span>Image</span></div>
-                <div class="tool-item"><div class="tool-icon"><i class="ri-emotion-line"></i></div><span>Emoji</span></div>
-                <div class="tool-item"><div class="tool-icon"><i class="ri-history-line"></i></div><span>History</span></div>
-                <div class="tool-item"><div class="tool-icon"><i class="ri-edit-line"></i></div><span>Edit</span></div>
+                <!-- 隐藏的图片输入 -->
+                <input type="file" ref="imageInput" style="display: none" accept="image/*" @change="handleImageUpload">
+                
+                <div class="tool-item" @click="$refs.imageInput.click()"><div class="tool-icon color-image"><i class="ri-image-line"></i></div><span>Image</span></div>
+                <div class="tool-item" @click="openFeatureDialog('camera')"><div class="tool-icon color-camera"><i class="ri-camera-lens-line"></i></div><span>Camera</span></div>
+                <div class="tool-item" @click="openFeatureDialog('voice')"><div class="tool-icon color-voice"><i class="ri-mic-2-line"></i></div><span>Voice</span></div>
+                <div class="tool-item" @click="openFeatureDialog('video')"><div class="tool-icon color-video"><i class="ri-video-chat-line"></i></div><span>Video</span></div>
+                
+                <div class="tool-item" @click="openFeatureDialog('emoji')"><div class="tool-icon color-emoji"><i class="ri-emotion-line"></i></div><span>Emoji</span></div>
+                <div class="tool-item" @click="openFeatureDialog('transfer')"><div class="tool-icon color-transfer"><i class="ri-exchange-dollar-line"></i></div><span>Transfer</span></div>
+                <div class="tool-item" @click="openFeatureDialog('memory')"><div class="tool-icon color-memory"><i class="ri-brain-line"></i></div><span>Memory</span></div>
+                <div class="tool-item" @click="handleReroll"><div class="tool-icon"><i class="ri-restart-line"></i></div><span>Reroll</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Importer -->
+    <!-- Feature Dialog -->
+    <div v-if="showFeatureDialog" class="dialog-overlay" @click.self="showFeatureDialog = false">
+        <div class="dialog-panel-bottom">
+            <div class="dialog-header-row">
+                <span class="dialog-title">{{ featureTitle }}</span>
+                <div class="sender-toggle" @click="toggleFeatureSender">
+                    <img v-if="featureSender === 'me' && currentUser.avatar" :src="currentUser.avatar">
+                    <img v-else-if="featureSender === 'them' && targetChar.avatar" :src="targetChar.avatar">
+                    <div v-else class="avatar-placeholder-xs">{{ featureSender === 'me' ? 'Me' : 'Ta' }}</div>
+                    <i class="ri-arrow-left-right-line" style="font-size:10px; margin-left:4px; color:#999;"></i>
+                </div>
+            </div>
+            
+            <p v-if="featureType !== 'transfer'" style="font-size:12px; color:#999; margin-bottom:10px;">{{ featureDesc }}</p>
+
+            <div v-if="featureType === 'transfer'" style="margin-bottom: 10px;">
+                <label style="font-size:12px; color:#999;">Amount (¥)</label>
+                <input type="number" v-model="featureAmount" class="dialog-input-glass" style="margin-bottom:10px;" placeholder="0.00">
+            </div>
+
+            <textarea v-model="featureInputText" class="dialog-input-glass" rows="3" :placeholder="featurePlaceholder"></textarea>
+            
+            <div class="dialog-actions">
+                <button class="btn-cancel-glass" @click="showFeatureDialog = false">Cancel</button>
+                <button class="btn-confirm-glass" @click="confirmFeatureSend" :style="{ background: targetChar.themeColor || '#ff9a8b' }">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Detail Dialog -->
+    <div v-if="showTransferDialog" class="dialog-overlay" @click.self="showTransferDialog = false">
+        <div class="dialog-panel-bottom" style="text-align: center;">
+            <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">
+                {{ currentTransferMsg.sender === 'me' ? '我的转账' : '收到转账' }}
+            </div>
+            
+            <div style="font-size: 32px; font-weight: bold; color: #333; margin: 15px 0;">
+                ¥ {{ currentTransferMsg.amount || '0.00' }}
+            </div>
+            
+            <div style="font-size: 13px; color: #999; margin-bottom: 25px;">
+                {{ currentTransferMsg.text || '无备注' }}
+            </div>
+
+            <div v-if="currentTransferMsg.sender !== 'me' && currentTransferMsg.status === 'pending'" class="dialog-actions">
+                <button class="btn-cancel-glass" @click="processTransfer('rejected')" style="color: #ff4757;">退还</button>
+                <button class="btn-confirm-glass" @click="processTransfer('received')" style="background: #ff9a8b;">收款</button>
+            </div>
+            
+            <div v-else style="color: #ccc; font-size: 13px; padding-bottom: 10px;">
+                <span v-if="currentTransferMsg.status === 'pending'">等待对方确认</span>
+                <span v-else-if="currentTransferMsg.status === 'received'">已收款</span>
+                <span v-else-if="currentTransferMsg.status === 'rejected'">已退还</span>
+                <span v-else>状态未知</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Overlay -->
+    <div v-if="previewMsg" class="preview-overlay" @click="closePreview">
+        <img v-if="previewMsg.type === 'image'" :src="previewMsg.text" class="preview-img" style="max-height: 80%;">
+        <div v-else-if="previewMsg.type === 'camera'" class="preview-text-card" @click.stop>
+            <div style="font-size: 14px; color: #999; margin-bottom: 10px; font-weight: bold;">IMAGE CONTENT</div>
+            {{ previewMsg.text }}
+        </div>
+        <div v-else-if="previewMsg.type !== 'image'" class="preview-text-card" @click.stop>
+            {{ previewMsg.text }}
+        </div>
+    </div>
+
+    <!-- Importer, Menu, Toast, Dialog (Basic) -->
     <div v-if="showImporter" class="importer-overlay" @click.self="showImporter = false">
         <div class="importer-panel">
             <div class="importer-header"><span>{{ importerStep === 1 ? '选择聊天对象 (Char)' : '选择你的身份 (User)' }}</span><button class="btn-close-sm" @click="showImporter = false"><i class="ri-close-line"></i></button></div>
-            
             <div class="importer-list" v-if="importerStep === 1">
                 <div v-if="availableToImport.length === 0" style="text-align:center; padding:20px; color:#999; font-size:13px; display:flex; flex-direction:column; gap:10px;">
                     <span>暂无角色</span>
@@ -153,14 +299,11 @@
                     <i class="ri-arrow-right-s-line btn-add-icon" style="color: #ccc;"></i>
                 </div>
             </div>
-            
             <div class="importer-list" v-if="importerStep === 2">
                  <div class="import-item" v-for="user in availableUsers" :key="user.id" @click="createChatSession(user)"><div class="import-avatar"><img v-if="user.avatar" :src="user.avatar"><div v-else>{{ user.name[0] }}</div></div><div class="import-name">{{ user.nickname || user.name }}</div><i class="ri-check-line btn-add-icon" style="color: #4cd137;"></i></div>
             </div>
         </div>
     </div>
-
-    <!-- Menu, Dialog, Toast (保持不变) -->
     <div v-if="menuVisible" class="menu-overlay" @click.self="closeMenu">
         <div v-if="menuType === 'session'" class="menu-panel session-menu">
             <div class="menu-header">会话选项</div>
@@ -204,6 +347,117 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================== -->
+    <!-- NEW VIDEO OVERLAY (Fullscreen & PIP Impl)      -->
+    <!-- ============================================== -->
+
+    <!-- A: 最小化模式 (PIP) -->
+    <div v-if="videoCall.active && videoCall.isMinimized" class="video-pip-widget" @click="restoreVideo">
+        <!-- 修复：优先显示 Char 头像，如无则显示默认图，防止黑屏 -->
+        <img :src="targetChar.avatar || defaultAvatar" class="video-pip-img">
+        <div class="video-pip-overlay">
+            <div class="pip-status-dot"></div>
+            <span class="pip-time">{{ videoCall.durationStr }}</span>
+        </div>
+    </div>
+
+    <!-- B: 全屏沉浸模式 -->
+    <div v-if="videoCall.active && !videoCall.isMinimized" class="video-overlay-fullscreen">
+        
+        <!-- 1. 背景层 (支持自定义 + 模糊) -->
+        <div v-if="!videoSettings.bgImage && !targetChar.avatar" class="video-bg-placeholder">No Background</div>
+        <img v-else :src="videoSettings.bgImage || targetChar.avatar || defaultAvatar" 
+             class="video-bg-remote" 
+             :style="{ filter: `blur(${videoSettings.blurAmount}px)` }">
+        
+        <div class="video-bg-gradient"></div>
+
+        <!-- 2. 我方小画面 (PIP) -->
+        <div class="video-pip-local" v-if="videoCall.status === 'connected'">
+            <img :src="currentUser.avatar || defaultAvatar">
+        </div>
+
+        <!-- 3. 顶部栏 (设置 + 最小化) -->
+        <div class="video-top-header">
+            <button class="btn-video-icon" @click="openVideoSettings"><i class="ri-settings-3-line"></i></button>
+            <div class="video-time-pill" v-if="videoCall.status === 'connected'">{{ videoCall.durationStr }}</div>
+            <button class="btn-video-icon" @click="minimizeVideo"><i class="ri-subtract-line"></i></button>
+        </div>
+
+        <!-- 4. 呼叫中状态 (略，保持原有即可) -->
+        <!-- ... (Calling UI 代码保持不变) ... -->
+
+        <!-- 5. 字幕滚动区 (长按编辑) -->
+        <div v-if="videoCall.status === 'connected'" class="video-subtitle-scroll-area" ref="videoSubtitleArea">
+             <div v-for="msg in currentVideoMessages" :key="msg.id" class="v-sub-item" :class="msg.sender">
+                 <div class="v-sub-name">{{ msg.sender === 'me' ? 'Me' : (targetChar.nickname || targetChar.name) }}</div>
+                 <!-- 核心：onTouchStart 绑定长按事件 -->
+                 <div class="v-sub-text"
+                      :style="{ color: msg.sender === 'me' ? videoSettings.subtitleColorMe : videoSettings.subtitleColorThem }"
+                      @touchstart="handleSubtitleTouchStart(msg)"
+                      @touchend="handleSubtitleTouchEnd"
+                      @contextmenu.prevent>
+                    {{ msg.text }}
+                 </div>
+             </div>
+             <div style="height: 10px;"></div>
+        </div>
+
+        <!-- 6. 底部控制区 -->
+        <div v-if="videoCall.status === 'connected' && !videoEditState.visible && !videoSettings.visible" class="video-controls-area">
+             <div class="video-toolbar-row">
+                <button class="btn-video-tool" @click="handleVideoReroll"><i class="ri-restart-line"></i> Reroll</button>
+                <button class="btn-video-tool" @click="triggerToast('长按字幕进行编辑')"><i class="ri-edit-line"></i> Hold to Edit</button>
+            </div>
+            <div class="video-input-row">
+                <input v-model="inputText" class="video-input-box" placeholder="Speak..." @keydown.enter.prevent="handleEnterKey">
+                <button v-if="inputText.trim()" class="btn-video-send" @click="sendMessage"><i class="ri-send-plane-fill"></i></button>
+                <button v-else class="btn-video-hangup" @click="endVideoCall('ended')"><i class="ri-phone-fill" style="transform: rotate(135deg)"></i></button>
+            </div>
+        </div>
+
+        <!-- [面板] 编辑面板 (Dark) -->
+        <div v-if="videoEditState.visible" class="video-settings-panel" style="z-index: 9700;">
+            <div class="vs-title">EDIT SUBTITLE</div>
+            <textarea v-model="videoEditState.text" class="v-edit-textarea" rows="4" style="background:#333; border:none; color:white; padding:10px; border-radius:10px;"></textarea>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-v-cancel" @click="videoEditState.visible = false" style="flex:1; padding:10px; background:#333; color:#999; border:none; border-radius:8px;">Cancel</button>
+                <button class="btn-v-save" @click="saveVideoEdit" style="flex:1; padding:10px; background:#ff9a8b; color:white; border:none; border-radius:8px;">Save</button>
+            </div>
+        </div>
+
+        <!-- [面板] 设置面板 (Settings) -->
+        <div v-if="videoSettings.visible" class="video-settings-panel">
+            <div class="vs-title">VIDEO SETTINGS</div>
+            
+            <!-- 背景图 -->
+            <div class="vs-row">
+                <span class="vs-label">Background</span>
+                <input type="file" ref="bgUpload" style="display:none" accept="image/*" @change="handleVideoBgUpload">
+                <button class="vs-btn-upload" @click="$refs.bgUpload.click()">Upload Image</button>
+            </div>
+            
+            <!-- 模糊度 -->
+            <div class="vs-row">
+                <span class="vs-label">Blur</span>
+                <input type="range" v-model="videoSettings.blurAmount" min="0" max="10" step="1" style="width: 100px;">
+            </div>
+
+            <!-- 颜色设置 -->
+            <div class="vs-row">
+                <span class="vs-label">My Color</span>
+                <div class="color-picker-row">
+                    <div class="color-dot" style="background:#ffeaa7" @click="setSubtitleColor('me', '#ffeaa7')"></div>
+                    <div class="color-dot" style="background:#81ecec" @click="setSubtitleColor('me', '#81ecec')"></div>
+                    <div class="color-dot" style="background:#ff7675" @click="setSubtitleColor('me', '#ff7675')"></div>
+                </div>
+            </div>
+
+            <button @click="closeVideoSettings" style="width:100%; padding:12px; background:#333; color:white; border:none; border-radius:10px; font-weight:bold;">Close</button>
+        </div>
+    </div>
+
     <div v-if="showToast" class="toast-popup">
         <i class="ri-information-line"></i>
         <span>{{ toastMessage }}</span>

@@ -1,0 +1,130 @@
+<div class="api-set-container">
+    <div class="api-header">
+        <button class="btn-icon" @click="goBack"><i class="ri-arrow-left-s-line"></i></button>
+        
+        <div class="header-center" @click="showPresetList = true">
+            <span class="header-title">{{ form.name || 'Unsaved Config' }}</span>
+            <i class="ri-arrow-down-s-fill" style="font-size: 14px; color: #999;"></i>
+        </div>
+        
+        <div style="width: 32px;"></div>
+    </div>
+    
+    <div class="api-body">
+        <div class="api-card">
+            
+            <div class="form-group">
+                <label>Config Name (配置名)</label>
+                <div class="tip-text" v-if="!form.name" style="color: #ff9a8b;">* 保存时必填，应用时可选</div>
+                <input v-model="form.name" type="text" placeholder="e.g. My API">
+            </div>
+
+            <!-- 修改点：Label 改为 API URL -->
+            <div class="form-group">
+                <label>API URL (地址)</label>
+                <input v-model="form.apiUrl" type="text" placeholder="https://api.openai.com">
+            </div>
+            
+            <div class="form-group">
+                <label>API Key (令牌)</label>
+                <input v-model="form.apiKey" type="password" placeholder="API Key">
+            </div>
+            
+            <div class="form-group">
+                <div class="label-row">
+                    <label>Model Name (模型)</label>
+                    <span class="link-btn" @click="fetchModels">
+                        <i class="ri-refresh-line" :class="{ spinning: isLoadingModels }"></i> Get List
+                    </span>
+                </div>
+                
+                <input v-model="form.model" type="text" placeholder="gpt-4o" @focus="showModelSelector = false">
+                
+                <div v-if="showModelSelector && availableModels.length > 0" class="model-dropdown">
+                    <div class="dropdown-header">Select Model <i class="ri-close-line" @click="showModelSelector = false"></i></div>
+                    <div class="model-list">
+                        <div v-for="m in availableModels" :key="m" class="model-item" @click="selectModel(m)">
+                            {{ m }}
+                        </div>
+                    </div>
+                </div>
+
+            <!-- ✅ 新增：温度调节 -->
+            <div class="form-group" style="margin-top: 10px;">
+                <div class="label-row">
+                    <label>Temperature: {{ form.temperature }}</label>
+                    <span class="tip-text" style="font-size:10px;">
+                        {{ form.temperature < 0.5 ? 'Rigid' : (form.temperature > 1.2 ? 'Creative' : 'Balanced') }}
+                    </span>
+                </div>
+                
+                <!-- ✅ 核心：直接绑定 :style="sliderBackground" -->
+                <input type="range" 
+                       v-model.number="form.temperature" 
+                       min="0" max="2" step="0.1" 
+                       class="slider-input"
+                       :style="sliderBackground">
+            </div>
+
+            <div class="form-group-row" style="margin-top: 10px;">
+                <label>Stream Response (流式输出)</label>
+                <div class="toggle-switch" :class="{ active: form.streamEnabled }" @click="form.streamEnabled = !form.streamEnabled">
+                    <div class="toggle-circle"></div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="action-row">
+            <button class="btn-secondary" @click="applyConfig" :disabled="isValidating">
+                <span v-if="isValidating">Testing...</span>
+                <span v-else>Apply Only</span>
+            </button>
+            
+            <button class="btn-primary" @click="savePreset" :disabled="isValidating">
+                <i v-if="!isValidating" class="ri-save-line"></i>
+                <span v-if="isValidating">Verifying...</span>
+                <span v-else>Save Preset</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Config List Overlay -->
+    <div v-if="showPresetList" class="config-list-overlay" @click.self="showPresetList = false">
+        <div class="config-list-panel">
+            <div class="list-header">
+                <span>切换配置</span>
+                <button class="btn-text" @click="createNew"><i class="ri-add-line"></i> New</button>
+            </div>
+            <div class="config-list-scroll">
+                <div v-if="presets.length === 0" class="empty-list">
+                    暂无保存的配置<br>请填写后点击 "Save Preset"
+                </div>
+                
+                <div v-for="p in presets" :key="p.id" 
+                     class="config-item" 
+                     :class="{ active: p.id === form.id }"
+                     @click="switchPreset(p)">
+                    
+                    <div class="config-info">
+                        <div class="config-name">{{ p.name }}</div>
+                        <div class="config-url">{{ p.apiUrl }}</div>
+                        <div class="config-model">{{ p.model }}</div>
+                    </div>
+                    
+                    <button class="btn-del-config" @click.stop="deletePreset(p.id)">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="showToast" class="toast-popup-api" :class="{ error: toastType === 'error', success: toastType === 'success' }">
+        <i v-if="toastType === 'success'" class="ri-checkbox-circle-line"></i>
+        <i v-else-if="toastType === 'error'" class="ri-error-warning-line"></i>
+        <i v-else class="ri-information-line"></i>
+        <span>{{ toastMsg }}</span>
+    </div>
+
+</div>

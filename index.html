@@ -6,16 +6,12 @@
     <title>ZS.Mark</title>
 
     <!-- === PWA 核心配置 === -->
-    <!-- 1. Manifest (安卓主要看这个) -->
-    <!-- 给 manifest 加个版本号 ?v=3 强制刷新 -->
     <link rel="manifest" href="manifest.json?v=3">
     
     <!-- 2. 状态栏颜色 -->
     <meta name="theme-color" content="#fdfbf7">
 
     <!-- === 关键修复：iOS & 移动端图标强制声明 === -->
-    <!-- 3. Apple Touch Icon (iOS 和部分国产安卓桌面看这个) -->
-    <!-- 🚨 注意：给图片链接也加了 ?v=3，强制清缓存 -->
     <link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/8zjvfhDg/ZS-Mark.png?v=3">
     <link rel="icon" type="image/png" href="https://i.postimg.cc/8zjvfhDg/ZS-Mark.png?v=3">
 
@@ -26,12 +22,11 @@
 
     <!-- 样式表 -->
     <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="apps/desktop/style.css"> <!-- 预加载桌面样式防止闪烁 -->
+    <link rel="stylesheet" href="apps/desktop/style.css"> 
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     
     <style>
-        /* 系统级背景球 */
         .bg-orb { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 0; pointer-events: none; }
         .orb-1 { width: 200px; height: 200px; background: #ffecd2; top: -50px; left: -50px; opacity: 0.8; }
         .orb-2 { width: 300px; height: 300px; background: #fcb69f; bottom: -80px; right: -80px; opacity: 0.6; }
@@ -45,9 +40,18 @@
             <div class="bg-orb orb-2"></div>
 
             <!-- 动态组件挂载点：currentView 变化时自动切换 -->
-            <!-- @switch-app 是子组件请求切换 App 的事件 -->
             <component :is="currentView" @switch-app="handleAppSwitch"></component>
 
+            <div v-if="notification.show" class="notification-banner" @click="handleBannerClick">
+                <div class="notify-avatar">
+                    <img v-if="notification.avatar" :src="notification.avatar">
+                    <div v-else class="notify-placeholder">{{ notification.title[0] }}</div>
+            </div>
+            <div class="notify-content">
+                <div class="notify-title">{{ notification.title }}</div>
+                <div class="notify-text">{{ notification.text }}</div>
+            </div>
+            <div class="notify-time">Now</div> 
         </div>
     </div>
 

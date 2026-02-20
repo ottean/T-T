@@ -112,7 +112,7 @@
 .hex-text-input {
     border: none; background: transparent; padding: 0; margin-bottom: 2px;
     font-size: 11px; color: #666; font-family: monospace; letter-spacing: 0.5px;
-    width: 100%; text-transform: uppercase; font-weight: bold; text-align: center;
+    text-transform: uppercase; font-weight: bold; text-align: center;
     outline: none;
 }
 .hex-text-input:focus { color: #ff9a8b; }
