@@ -8,28 +8,44 @@
         <div v-if="!editingId" style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
             <!-- Tab 切换 -->
             <div class="tab-switch" style="margin-left: 10px;">
-                <span :class="{ active: currentTab === 'char' }" @click="switchTab('char')">Character</span>
+                <span :class="{ active: currentTab === 'char' }" @click="switchTab('char')">Char</span>
                 <span class="divider">/</span>
                 <span :class="{ active: currentTab === 'user' }" @click="switchTab('user')">User</span>
+                <span class="divider">/</span>
+                <span :class="{ active: currentTab === 'world' }" @click="switchTab('world')">
+                    {{ currentTab === 'world' && currentFolderId ? getFolderName(currentFolderId) : 'World' }}
+                </span>
             </div>
 
-            <!-- ✅ 修复：列表页导入按钮 (仅 Char 显示) -->
-            <div class="header-actions" v-if="currentTab === 'char'">
+            <div class="header-actions" v-if="(currentTab === 'char' || currentTab === 'world') && !currentFolderId">
                 <input type="file" ref="listImportInput" @change="handleListImport" style="display: none;" accept=".json">
                 <button class="btn-action-icon" title="Import JSON" @click="$refs.listImportInput.click()">
                     <i class="ri-download-cloud-2-line"></i>
+                </button>
+            </div>
+            
+            <div class="header-actions" v-if="currentTab === 'world' && currentFolderId">
+                <button class="btn-action-icon" title="Export Folder" @click="exportCurrentFolder" style="margin-right: 8px;">
+                    <i class="ri-upload-cloud-2-line"></i>
+                </button>
+                <button class="btn-action-icon" title="Edit Folder" @click="editCurrentFolder">
+                    <i class="ri-settings-3-line"></i>
                 </button>
             </div>
         </div>
 
         <!-- === 编辑模式 (Edit View) === -->
         <div v-else style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
-            <div class="header-title" style="margin-left: 10px;">
-                {{ currentTab === 'user' ? 'Edit User' : 'Edit Character' }}
+            <div class="header-title" style="margin-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                <span v-if="currentTab === 'user'">Edit User</span>
+                <span v-else-if="currentTab === 'char'">Edit Char</span>
+                <span v-else-if="currentTab === 'world'">
+                    Edit {{ editingData.type === 'card' && editingData.folderId ? getFolderName(editingData.folderId) : (editingData.type === 'folder' ? 'Folder' : 'World') }}
+                </span>
+                <span v-if="editingData.name || editingData.title" style="opacity: 0.8; font-size: 0.9em;"> - {{ editingData.name || editingData.title }}</span>
             </div>
             
-            <!-- 编辑页操作：仅 Char 显示 -->
-            <div class="header-actions" v-if="currentTab === 'char'">
+            <div class="header-actions" v-if="currentTab === 'char' || currentTab === 'world'">
                 <input type="file" ref="editImportInput" @change="handleEditImport" style="display: none;" accept=".json">
                 <button class="btn-action-icon" title="Overwrite with JSON" @click="$refs.editImportInput.click()">
                     <i class="ri-download-cloud-2-line"></i>
@@ -40,26 +56,39 @@
             </div>
         </div>
         
-        <!-- 占位符 (防止 Flex 布局塌陷) -->
         <div v-if="!editingId && currentTab === 'user'" style="width: 32px;"></div>
     </div>
 
     <!-- 列表视图 -->
     <div class="id-list-view" v-if="!editingId">
         <div class="card-grid">
-            <div v-if="sortedList.length === 0" class="empty-tip">
-                还没有档案，创建一个吧！
+            <div v-if="displayList.length === 0" class="empty-tip">
+                这里空空如也...<br><br><span style="font-size:12px; opacity:0.6;">(再次点击当前顶部 Tab 即可新建)</span>
             </div>
 
-            <div class="id-card" v-for="item in sortedList" :key="item.id" @click="editItem(item)">
-                <div v-if="currentTab === 'char'" class="card-color-strip" :style="{ background: item.themeColor || '#ff9a8b' }"></div>
+            <div class="id-card" v-for="item in displayList" :key="item.id" @click="editItem(item)">
+                <div v-if="currentTab === 'char' || currentTab === 'world'" class="card-color-strip" :style="{ background: item.themeColor || '#ff9a8b' }"></div>
+                
                 <div class="card-avatar">
-                    <img v-if="item.avatar" :src="item.avatar">
-                    <div v-else class="avatar-placeholder">{{ item.name ? item.name[0] : '?' }}</div>
+                    <img v-if="currentTab !== 'world' && item.avatar" :src="item.avatar">
+                    <div v-else-if="currentTab === 'world' && item.type === 'folder'" class="avatar-placeholder">
+                        <i class="ri-folder-2-fill" style="font-size: 20px;"></i>
+                    </div>
+                    <div v-else class="avatar-placeholder">
+                        {{ currentTab === 'world' ? (item.title ? item.title[0] : '?') : (item.name ? item.name[0] : '?') }}
+                    </div>
                 </div>
+                
                 <div class="card-info">
-                    <div class="card-name">{{ item.name || '未命名' }}</div>
+                    <div class="card-name">{{ item.name || item.title || '未命名' }}</div>
+                    <div class="card-sub" v-if="currentTab === 'world' && item.type === 'folder'">{{ getFolderItemCount(item.id) }} 个词条</div>
+                    <div class="card-sub" v-if="currentTab === 'world' && item.type === 'card'">
+                        <span v-if="item.folderId">所属: {{ getFolderName(item.folderId) }}</span>
+                        <span v-if="item.folderId && item.triggerType === 'constant'" style="margin: 0 4px;">|</span>
+                        <span v-if="item.triggerType === 'constant'" style="color: #ff9a8b; font-weight: bold;"><i class="ri-gemini-line"></i> 常驻</span>
+                    </div>
                 </div>
+                
                 <button class="card-fav-btn" 
                         :class="{ active: item.isPinned }"
                         :style="{ color: item.isPinned ? (item.themeColor || '#ff9a8b') : '#eee' }"
@@ -67,25 +96,150 @@
                     <i class="ri-bear-smile-line"></i>
                 </button>
             </div>
-
-            <div class="id-card add-card" @click="addNew">
-                <i class="ri-add-circle-line"></i>
-                <span>新建档案</span>
-            </div>
         </div>
     </div>
 
     <!-- 编辑视图 -->
     <div class="id-edit-view" v-else>
-        <div class="edit-avatar-section" @click="triggerUpload">
-            <img v-if="editingData.avatar" :src="editingData.avatar">
-            <div v-else class="edit-avatar-placeholder"><i class="ri-camera-line"></i></div>
+        <!-- 头像上传区域优化 -->
+        <div class="edit-avatar-section" 
+             :class="{ deleting: showAvatarDelete }"
+             v-if="currentTab !== 'world'" 
+             @click="handleAvatarClick">
+             
+            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                <img v-if="editingData.avatar" :src="editingData.avatar">
+                <div v-else class="edit-avatar-placeholder"><i class="ri-camera-line"></i></div>
+            </div>
+
+            <!-- 右上角删除红叉 (只在点击图片后显示) -->
+            <div v-if="editingData.avatar && showAvatarDelete"
+                 class="avatar-delete-btn"
+                 @click.stop="removeAvatar">
+                <i class="ri-close-line"></i>
+            </div>
+
             <input type="file" ref="fileInput" @change="handleUpload" style="display:none" accept="image/*">
         </div>
 
-        <!-- === 角色 (AI) 编辑表单 === -->
+        <!-- === World 编辑表单 === -->
+        <div class="edit-form" v-if="currentTab === 'world'">
+            
+            <div class="form-group" v-if="!getSourceList().find(i => i.id === editingId) && !currentFolderId">
+                <label><i class="ri-list-settings-line"></i> Type (分类)</label>
+                <select v-model="editingData.type" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
+                    <option value="folder">Folder (文件夹)</option>
+                    <option value="card">Card (词条卡片)</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-flex">
+                    <label>Title (名称)<span class="required-star">*</span></label>
+                    <input v-model="editingData.title" type="text" placeholder="必填">
+                </div>
+                
+                <div class="form-group col-flex" v-if="editingData.type === 'card' && !currentFolderId">
+                    <label><i class="ri-folder-2-line"></i> Folder (所属)</label>
+                    <select v-model="editingData.folderId" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
+                        <option :value="null">Root (根目录)</option>
+                        <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.title }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-fixed-hex">
+                    <input type="text" v-model="editingData.themeColor" class="hex-text-input" maxlength="7">
+                    <div class="color-block-btn" @click="$refs.worldColorInput.click()" :style="{ background: editingData.themeColor || '#ff9a8b' }">
+                        <input type="color" ref="worldColorInput" v-model="editingData.themeColor" class="color-input-hidden">
+                    </div>
+                </div>
+            </div>
+
+            <template v-if="editingData.type === 'folder' || !editingData.folderId">
+                <div class="form-row">
+                    <div class="form-group col-flex">
+                        <label><i class="ri-global-line"></i> Binding Scope (生效范围)</label>
+                        <select v-model="editingData.bindingType" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
+                            <option value="disabled">Disabled (不启用)</option>
+                            <option value="global">Global (全局通用)</option>
+                            <option value="local">Local (局部绑定)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group" v-if="editingData.bindingType === 'local'">
+                    <label><i class="ri-user-follow-line"></i> Bound Characters (点击选择)</label>
+                    <div style="border: 1px solid #eee; border-radius: 12px; max-height: 220px; overflow-y: auto; background: white;">
+                        <div v-if="chars.length === 0" style="padding: 15px; text-align: center; color: #999; font-size: 13px;">没有可用的角色</div>
+                        <div v-for="c in chars" :key="c.id" @click="toggleBoundChar(c.id)" style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #f9f9f9; cursor: pointer; user-select: none;">
+                            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; margin-right: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" :style="editingData.boundChars && editingData.boundChars.includes(c.id) ? { borderColor: '#4CAF50', background: '#4CAF50' } : {}">
+                                <i v-if="editingData.boundChars && editingData.boundChars.includes(c.id)" class="ri-check-line" style="color: white; font-size: 14px;"></i>
+                            </div>
+                            <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; margin-right: 10px; background: #eee; flex-shrink: 0;">
+                                <img v-if="c.avatar" :src="c.avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                                <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">{{ c.name ? c.name[0] : '?' }}</div>
+                            </div>
+                            <div style="font-size: 14px; color: #333; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ c.name }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <template v-if="editingData.type === 'folder' && editingData.bindingType !== 'disabled'">
+                    <div class="form-row" style="margin-top: 10px;">
+                        <div class="form-group col-flex">
+                            <label><i class="ri-list-check"></i> Enabled Cards (启用的词条)</label>
+                            <select v-model="editingData.enabledCardsType" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
+                                <option value="all">All Cards (全部启用)</option>
+                                <option value="selected">Selected Only (自定义勾选)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" v-if="editingData.enabledCardsType === 'selected'">
+                        <label>Select Cards (点击勾选)</label>
+                        <div style="border: 1px solid #eee; border-radius: 12px; max-height: 220px; overflow-y: auto; background: white;">
+                            <div v-if="currentFolderCards.length === 0" style="padding: 15px; text-align: center; color: #999; font-size: 13px;">空文件夹</div>
+                            <div v-for="card in currentFolderCards" :key="card.id" @click="toggleEnabledCard(card.id)" style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #f9f9f9; cursor: pointer; user-select: none;">
+                                <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; margin-right: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" :style="editingData.enabledCards && editingData.enabledCards.includes(card.id) ? { borderColor: '#4CAF50', background: '#4CAF50' } : {}">
+                                    <i v-if="editingData.enabledCards && editingData.enabledCards.includes(card.id)" class="ri-check-line" style="color: white; font-size: 14px;"></i>
+                                </div>
+                                <div style="font-size: 14px; color: #333; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ card.title || '未命名词条' }}
+                                    <span v-if="card.triggerType === 'constant'" style="margin-left: 8px; font-size: 12px; color: #ff9a8b; background: rgba(255,154,139,0.1); padding: 2px 6px; border-radius: 4px;">
+                                        <i class="ri-gemini-line"></i> 常驻
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <template v-if="editingData.type === 'card'">
+                <div class="form-row">
+                    <div class="form-group col-flex">
+                        <label><i class="ri-flashlight-line"></i> Trigger Type (触发方式)</label>
+                        <select v-model="editingData.triggerType" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
+                            <option value="constant">Constant (全局常驻/预设破限)</option>
+                            <option value="keyword">Keyword (匹配关键词触发)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" v-if="editingData.triggerType === 'keyword'">
+                    <label>Keywords (触发关键词)</label>
+                    <textarea v-model="editingData.keywords" rows="2" placeholder="分隔符支持中/英文逗号 (e.g. 魔法, Magic, Item)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Content (内容详细设定)</label>
+                    <textarea v-model="editingData.content" rows="6" placeholder="世界观背景、物品规则、隐藏设定、破限要求..."></textarea>
+                </div>
+            </template>
+        </div>
+
+        <!-- === Char 编辑表单 === -->
         <div class="edit-form" v-if="currentTab === 'char'">
-            <!-- 第一行：姓名 | 备注 | 颜色 -->
             <div class="form-row">
                 <div class="form-group col-flex">
                     <label>Name (姓名)<span class="required-star">*</span></label>
@@ -96,13 +250,10 @@
                     <input v-model="editingData.nickname" type="text" placeholder="聊天显示名">
                 </div>
                 
-                <!-- 颜色列：上文本 下色块 -->
                 <div class="form-group col-fixed-hex">
                     <input type="text" v-model="editingData.themeColor" class="hex-text-input" maxlength="7">
-                    
-                    <!-- ✅ 这里的点击事件已分离，不会触发文本框 -->
-                    <div class="color-block-btn" @click="$refs.colorInput.click()" :style="{ background: editingData.themeColor || '#ff9a8b' }">
-                        <input type="color" ref="colorInput" v-model="editingData.themeColor" class="color-input-hidden">
+                    <div class="color-block-btn" @click="$refs.charColorInput.click()" :style="{ background: editingData.themeColor || '#ff9a8b' }">
+                        <input type="color" ref="charColorInput" v-model="editingData.themeColor" class="color-input-hidden">
                     </div>
                 </div>
             </div>
@@ -111,24 +262,21 @@
                 <label>Bio (人设简介)</label>
                 <textarea v-model="editingData.bio" rows="3" placeholder="性格、喜好、背景故事..."></textarea>
             </div>
-
             <div class="form-group">
                 <label>World Setting (世界观)</label>
                 <textarea v-model="editingData.world" rows="2" placeholder="角色所处的世界背景..."></textarea>
             </div>
-            
             <div class="form-group">
                 <label>Dialogue Example (台词示例)</label>
                 <textarea v-model="editingData.dialogue" rows="3" placeholder="AI 学习用的对话样本..."></textarea>
             </div>
-
             <div class="form-group">
                 <label>Opening Line (开场白)</label>
                 <textarea v-model="editingData.greeting" rows="2" placeholder="线上聊天开场白（按回车换行可分气泡发送）"></textarea>
             </div>
         </div>
 
-        <!-- === 用户 (User) 编辑表单 === -->
+        <!-- === User 编辑表单 === -->
         <div class="edit-form" v-if="currentTab === 'user'">
             <div class="form-group">
                 <label>Name (姓名)<span class="required-star">*</span></label>
@@ -145,7 +293,7 @@
         </div>
 
         <div class="edit-actions">
-            <button v-if="currentList.find(i => i.id === editingId)" class="btn-delete" @click="deleteItem">删除档案</button>
+            <button v-if="getSourceList().find(i => i.id === editingId)" class="btn-delete" @click="deleteItem">删除档案</button>
             <button class="btn-save" @click="saveEdit">保存档案</button>
         </div>
     </div>

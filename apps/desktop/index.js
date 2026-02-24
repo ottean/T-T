@@ -123,19 +123,18 @@ export default {
             ],
 
             extraApps: [
-                { id: 'world-book', name: 'Archive', icon: 'ri-book-read-line' }, 
-                { id: 'monitor',    name: 'Trace', icon: 'ri-map-pin-line' }
+                { id: 'activity-feed', name: 'Forum', icon: 'ri-at-line' }, 
+                { id: 'monitor',    name: 'Trace', icon: 'ri-scan-2-line' }
             ],
             page2Apps: [
-                { id: 'diary',      name: 'Diary',    icon: 'ri-book-3-line' },
-                { id: 'check',      name: 'Check',    icon: 'ri-smartphone-line' },
-                { id: 'shop',       name: 'Mall',     icon: 'ri-shopping-bag-3-line' },
-                { id: 'music',      name: 'Music',    icon: 'ri-disc-line' },
-                { id: 'forum',      name: 'Forum',    icon: 'ri-discuss-line' }
+                { id: 'diary',      name: 'Diary',    icon: 'ri-book-2-line' },
+                { id: 'check',      name: 'Check',    icon: 'ri-tablet-line' },
+                { id: 'shop',       name: 'Mall',     icon: 'ri-shopping-bag-4-line' },
+                { id: 'music',      name: 'Music',    icon: 'ri-disc-line' }
             ],
             dockApps: [
-                { id: 'profile',   name: 'Identity', icon: 'ri-passport-line' },
-                { id: 'appearance', name: 'Vision', icon: 'ri-paint-brush-line' }, 
+                { id: 'profile',   name: 'Identity', icon: 'ri-account-box-2-line' },
+                { id: 'appearance', name: 'Vision', icon: 'ri-palette-line' }, 
                 { id: 'api-set',    name: 'Link', icon: 'ri-links-line' },
                 { id: 'settings',   name: 'Control', icon: 'ri-equalizer-line' }
             ],

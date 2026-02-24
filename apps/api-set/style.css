@@ -191,3 +191,14 @@
     transform: scale(1.1); /* 按下微放大 */
     background: #fdfbf7;   /* 按下变色 */
 }
+
+/* 只修改尺寸，保留原有的设计风格 */
+.form-group-row input.input-mini {
+    width: 80px !important;       /* 强制改为小宽度 */
+    padding: 8px 5px !important;  /* 减小内边距，不然原来16px的padding会让小框很难看 */
+    text-align: center;           /* 数字居中好看点 */
+    height: auto !important;      /* 也就是自然高度 */
+    margin: 0 !important;
+    border-radius: 8px !important;
+}
+

@@ -78,13 +78,13 @@
 
 .edit-avatar-section {
     width: 90px; height: 90px; border-radius: 20px; background: #eee; margin: 10px auto 20px; 
-    overflow: hidden; position: relative; cursor: pointer;
+    overflow: visible; position: relative; cursor: pointer;
     border: 4px solid white; box-shadow: 0 5px 20px rgba(0,0,0,0.08);
     z-index: 5;
     flex-shrink: 0;
 }
-.edit-avatar-section img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.edit-avatar-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #ccc; }
+.edit-avatar-section img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 16px; transition: filter 0.2s; }
+.edit-avatar-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #ccc; border-radius: 16px; }
 
 .edit-form { flex: 1; display: flex; flex-direction: column; gap: 15px; }
 
@@ -136,3 +136,37 @@
 .edit-actions { display: flex; gap: 15px; margin-top: 30px; padding-bottom: 30px; }
 .btn-save { flex: 2; padding: 14px; background: #333; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 .btn-delete { flex: 1; padding: 14px; background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; }
+
+/* === 头像删除按钮 === */
+
+/* 选中待删除状态：图片稍微变暗，提示用户当前处于特殊状态 */
+.edit-avatar-section.deleting img { opacity: 0.9; filter: grayscale(20%); }
+
+.avatar-delete-btn {
+    position: absolute;
+    top: -5px; 
+    right: -5px;
+    width: 18px;  /* 直径改小 */
+    height: 18px;
+    background: #ff4d4f;
+    border-radius: 50%;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    color: white; 
+    cursor: pointer;
+    border: 2px solid white; /* 白色描边 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+    transition: transform 0.2s;
+}
+
+.avatar-delete-btn:hover {
+    transform: scale(1.1);
+    background: #ff7875;
+}
+
+.avatar-delete-btn i {
+    font-size: 10px; /* 图标字号改小 */
+    font-weight: bold;
+}

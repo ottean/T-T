@@ -12,7 +12,8 @@ export default {
                 apiKey: '',
                 model: '',
                 streamEnabled: false,
-                temperature: 1.0 
+                temperature: 1.0,
+                contextLimit: 50 // ✅ 新增：上下文条数，默认50
             },
             presets: [],
             
@@ -27,13 +28,14 @@ export default {
         }
     },
     computed: {
+        // 温度滑块样式 (0 ~ 2)
         sliderBackground() {
             const val = this.form.temperature;
             const percentage = (val / 2) * 100;
             return {
                 backgroundImage: `linear-gradient(to right, #ff9a8b 0%, #ff9a8b ${percentage}%, #e0e0e0 ${percentage}%, #e0e0e0 100%)`
             };
-        }
+        },
     },
     methods: {
         goBack() { 
@@ -50,6 +52,8 @@ export default {
                 try { 
                     const parsed = JSON.parse(activeConfig);
                     this.form = { ...this.form, ...parsed };
+                    // 兼容旧数据：如果没有 contextLimit，补上默认值
+                    if (this.form.contextLimit === undefined) this.form.contextLimit = 50;
                 } catch(e) {}
             }
         },
@@ -67,7 +71,6 @@ export default {
 
             this.isValidating = true;
             
-            // 构造 /models 接口 (仅在此处临时清洗，不影响 UI)
             let endpoint = this.getCleanUrl(this.form.apiUrl); 
             let modelsUrl = endpoint.replace('/chat/completions', '/models');
 
@@ -101,7 +104,6 @@ export default {
                 console.warn("Validate Fail:", e);
                 
                 if (isSilent) {
-                    // 如果是 Apply/Save 的静默验证，弹出 Confirm
                     const allowForce = confirm(`连接测试失败 (${errMsg})。\n\n但这可能是因为服务商关闭了查询接口，不代表 Key 无效。\n\n是否强制保存/应用？`);
                     return allowForce;
                 } else {
@@ -118,7 +120,6 @@ export default {
             const isValid = await this.validateConnection(true);
             if (!isValid) return; 
 
-            // 直接存原始数据，不做 URL 清洗
             localStorage.setItem('zs_mark_api_config', JSON.stringify(this.form));
             this.triggerToast('已应用临时配置', 'success');
         },
@@ -130,14 +131,15 @@ export default {
                 return;
             }
 
-            // 1. 判重逻辑
+            // 1. 判重逻辑 (增加 contextLimit 判断)
             const isDuplicate = this.presets.some(p => 
                 p.name === this.form.name &&
                 p.apiUrl === this.form.apiUrl &&
                 p.apiKey === this.form.apiKey &&
                 p.model === this.form.model &&
                 p.streamEnabled === this.form.streamEnabled &&
-                p.temperature === this.form.temperature
+                p.temperature === this.form.temperature &&
+                p.contextLimit === this.form.contextLimit // ✅
             );
 
             if (isDuplicate) {
@@ -149,7 +151,7 @@ export default {
             const isValid = await this.validateConnection(true);
             if (!isValid) return;
 
-            // 3. 保存 (直接存原始数据)
+            // 3. 保存
             const newPreset = { ...this.form, id: Date.now() };
             
             const idx = this.presets.findIndex(p => p.id === this.form.id);
@@ -168,6 +170,9 @@ export default {
         // === Switch: 切换预设 ===
         async switchPreset(preset) {
             this.form = { ...preset };
+            // 兼容旧预设
+            if (this.form.contextLimit === undefined) this.form.contextLimit = 50;
+            
             this.showPresetList = false;
             this.triggerToast(`已加载 "${preset.name}"，正在测试...`, 'info');
             await this.validateConnection(false); 
@@ -216,7 +221,6 @@ export default {
             }
         },
 
-        // 仅在内部请求时使用的清洗逻辑，不影响存储
         getCleanUrl(inputUrl) {
             let url = (inputUrl || '').trim();
             url = url.replace(/\/+$/, '');
@@ -234,7 +238,17 @@ export default {
         },
         
         createNew() {
-            this.form = { id: null, name: '', apiUrl: '', apiKey: '', model: '', streamEnabled: false, temperature: 1.0 };
+            // ✅ 修改：新建时 contextLimit 默认为 50
+            this.form = { 
+                id: null, 
+                name: '', 
+                apiUrl: '', 
+                apiKey: '', 
+                model: '', 
+                streamEnabled: false, 
+                temperature: 1.0, 
+                contextLimit: 50 
+            };
             this.showPresetList = false;
         },
         

@@ -112,7 +112,7 @@ export class ChatService {
 
         try {
             // 2. 构建上下文
-            const messages = this.buildContext(chatId, targetChar, currentUser);
+            const messages = this.buildContext(chatId, targetChar, currentUser, config);
 
             // 3. 发送请求 (包含完整的重试逻辑)
             const responseText = await this.callLLM(messages, config);
@@ -127,7 +127,7 @@ export class ChatService {
             this.addMessage(chatId, {
                 type: 'system',
                 text: `连接失败: ${e.message}`,
-                sender: 'system' // 这里原逻辑可能是 system，但也可能是 me/them，原代码没指定 sender，这里补全
+                sender: 'system' 
             });
         } finally {
             this.isTyping = false;
@@ -137,8 +137,25 @@ export class ChatService {
         }
     }
 
-    // 构建 Prompt (严格还原)
-    buildContext(chatId, char, user) {
+    // 构建 Prompt (严格还原，并加入世界书解析)
+    buildContext(chatId, char, user, config = {}) {
+        const history = this.chatHistory[chatId] || [];
+        
+        // ✅ 修改点：动态读取上下文长度
+        // 如果 config 里有 contextLimit 就用它，没有就默认 50 条
+        // 50 条对于 GPT-3.5/4 来说是一个比较平衡的数字
+        let limit = 50;
+        if (config && config.contextLimit) {
+            limit = parseInt(config.contextLimit);
+        }
+        // 确保至少有 1 条
+        if (limit < 1) limit = 20;
+
+        const recentMsgs = history.slice(-limit); 
+        // 1. 提取世界书/破限内容
+        const worldBookText = this.getWorldBookContent(char.id, recentMsgs);
+
+        // 2. 拼接基础系统设定
         let systemContent = `你正在进行一场角色扮演 (Roleplay)。
 你的角色: ${char.name}
 昵称: ${char.nickname || char.name}
@@ -171,6 +188,12 @@ export class ChatService {
 2. 回复简短自然，口语化。
 3. 如果想连续发多条消息，请用换行符分隔。`;
 
+        // 3. 注入世界书/常驻破限 (放在核心规则之后，拥有最高优先级)
+        if (worldBookText) {
+            systemContent += `\n\n【世界书 / 附加设定 / 强制规则】\n${worldBookText}`;
+        }
+
+        // 4. 注入对话示例
         if (char.dialogue) {
             systemContent += `\n\n【对话示例 (参考语气)】\n${char.dialogue}`;
         }
@@ -179,18 +202,13 @@ export class ChatService {
             { role: 'system', content: systemContent }
         ];
 
-        const history = this.chatHistory[chatId] || [];
-        const recentMsgs = history.slice(-20); 
-
         recentMsgs.forEach(m => {
             if (m.type === 'system') return;
             let content = m.text;
-            // 严格还原原代码的类型转换逻辑
             if (m.type === 'image') content = '[发送了一张图片]'; 
             if (m.type === 'voice') content = `[发送语音: ${m.text}]`;
             if (m.type === 'camera') content = `[分享照片: ${m.text}]`;
-            if (m.type === 'transfer') content = `[转账 ¥${m.amount}: ${m.text}]`;
-            if (m.type === 'transfer') {content = `[转账 ID:${m.id} 金额:¥${m.amount} 备注:${m.text}]`;}
+            if (m.type === 'transfer') content = `[转账 ID:${m.id} 金额:¥${m.amount} 备注:${m.text}]`;
 
             messages.push({
                 role: m.sender === 'me' ? 'user' : 'assistant',
@@ -199,6 +217,74 @@ export class ChatService {
         });
 
         return messages;
+    }
+
+    // 🆕 新增：解析并匹配世界书词条
+    getWorldBookContent(charId, recentMsgs) {
+        let worlds = [];
+        try {
+            const idDataStr = localStorage.getItem('zs_mark_identity');
+            if (idDataStr) {
+                const idData = JSON.parse(idDataStr);
+                if (idData.worlds) worlds = idData.worlds;
+            }
+        } catch(e) {}
+
+        if (!worlds.length) return '';
+
+        const folders = worlds.filter(w => w.type === 'folder');
+        const cards = worlds.filter(w => w.type === 'card');
+        
+        // 提取最近10条聊天文本，用于触发关键词匹配
+        const recentText = recentMsgs.slice(-10).map(m => m.text || '').join('\n').toLowerCase();
+        
+        let activatedContents = [];
+
+        cards.forEach(card => {
+            let isEnabled = false;
+
+            // 1. 判断该词条是否启用（全局生效 / 局部绑定了当前角色）
+            if (card.folderId) {
+                const folder = folders.find(f => f.id === card.folderId);
+                if (folder && folder.bindingType && folder.bindingType !== 'disabled') {
+                    const isBound = folder.bindingType === 'global' || (folder.boundChars && folder.boundChars.includes(charId));
+                    if (isBound) {
+                        const isCardEnabled = folder.enabledCardsType === 'all' || (folder.enabledCards && folder.enabledCards.includes(card.id));
+                        if (isCardEnabled) isEnabled = true;
+                    }
+                }
+            } else {
+                // 没有文件夹的根目录词条
+                if (card.bindingType && card.bindingType !== 'disabled') {
+                    const isBound = card.bindingType === 'global' || (card.boundChars && card.boundChars.includes(charId));
+                    if (isBound) isEnabled = true;
+                }
+            }
+
+            if (!isEnabled) return;
+
+            // 2. 判断是否触发
+            let isTriggered = false;
+            const triggerType = card.triggerType || 'keyword'; // 兜底兼容旧数据
+
+            if (triggerType === 'constant') {
+                isTriggered = true; // 常驻词条无条件激活
+            } else if (triggerType === 'keyword' && card.keywords) {
+                // 拆分关键词（支持中/英文逗号分隔）
+                const kws = card.keywords.split(/[,，]/).map(k => k.trim().toLowerCase()).filter(k => k);
+                // 只要近期的聊天记录中包含任何一个关键词，即触发
+                if (kws.some(kw => recentText.includes(kw))) {
+                    isTriggered = true;
+                }
+            }
+
+            if (isTriggered && card.content) {
+                activatedContents.push(card.content.trim());
+            }
+        });
+
+        // 将所有触发的内容用两个换行符拼接起来返回
+        return activatedContents.join('\n\n');
     }
 
     // 调用 API (严格还原双重重试机制)
