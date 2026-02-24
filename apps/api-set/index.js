@@ -12,7 +12,7 @@ export default {
                 apiKey: '',
                 model: '',
                 streamEnabled: false,
-                temperature: 1.0,
+                temperature: 0.8,
                 contextLimit: 50 // ✅ 新增：上下文条数，默认50
             },
             presets: [],
@@ -246,7 +246,7 @@ export default {
                 apiKey: '', 
                 model: '', 
                 streamEnabled: false, 
-                temperature: 1.0, 
+                temperature: 0.8, 
                 contextLimit: 50 
             };
             this.showPresetList = false;

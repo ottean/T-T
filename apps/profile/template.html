@@ -142,7 +142,7 @@
                 <div class="form-group col-flex" v-if="editingData.type === 'card' && !currentFolderId">
                     <label><i class="ri-folder-2-line"></i> Folder (所属)</label>
                     <select v-model="editingData.folderId" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
-                        <option :value="null">Root (根目录)</option>
+                        <option :value="null">未分类</option>
                         <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.title }}</option>
                     </select>
                 </div>
@@ -218,7 +218,7 @@
             <template v-if="editingData.type === 'card'">
                 <div class="form-row">
                     <div class="form-group col-flex">
-                        <label><i class="ri-flashlight-line"></i> Trigger Type (触发方式)</label>
+                        <label><i class="ri-gemini-line"></i> Trigger Type (触发方式)</label>
                         <select v-model="editingData.triggerType" style="padding: 0 12px; border: 1px solid #eee; border-radius: 12px; background: white; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; height: 44px; color: #333;">
                             <option value="constant">Constant (全局常驻/预设破限)</option>
                             <option value="keyword">Keyword (匹配关键词触发)</option>
